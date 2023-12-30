@@ -90,13 +90,13 @@ playerInfos = {
 worldInfos = {"worldPos": pygame.Vector2(-200, -250),
               "worldIndex": 0,
               "background": [
-                  pygame.transform.scale_by(pygame.image.load("./resources/map/spawn.png").convert_alpha(), 3.5),
+                  pygame.transform.scale(pygame.image.load("./resources/map/spawn.png").convert_alpha(), (1680, 1120)),
                   pygame.transform.scale(pygame.image.load("./resources/map/carte2.png").convert_alpha(), (1680, 1120))],
               "colliding": [
-                  pygame.transform.scale_by(pygame.image.load("./resources/map/spawn_coll.png").convert_alpha(), 3.5),
+                  pygame.transform.scale(pygame.image.load("./resources/map/spawn_coll.png").convert_alpha(), (1680, 1120)),
                   pygame.transform.scale(pygame.image.load("./resources/map/coll.png").convert_alpha(), (1680, 1120))],
               "foreground": [
-                  pygame.transform.scale_by(pygame.image.load("./resources/map/spawn_fore.png").convert_alpha(), 3.5),
+                  pygame.transform.scale(pygame.image.load("./resources/map/spawn_fore.png").convert_alpha(), (1680, 1120)),
                   pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(), (1680, 1120))],
               "collisions": [],
               "ennemiesForMap": [[], []],
