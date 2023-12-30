@@ -2,7 +2,7 @@ import pygame
 
 # Pygame values DO NOT MODIFY
 pygame.init()
-screen = pygame.display.set_mode((1280, 720))#, pygame.FULLSCREEN)
+screen = pygame.display.set_mode((1366, 912), pygame.FULLSCREEN)
 running = True
 clock = pygame.time.Clock()
 dt = 0
@@ -90,19 +90,19 @@ playerInfos = {
 worldInfos = {"worldPos": pygame.Vector2(-200, -250),
               "worldIndex": 0,
               "background": [
-                  pygame.transform.scale(pygame.image.load("./resources/map/spawn.png").convert_alpha(), (1680, 1120)),
-                  pygame.transform.scale(pygame.image.load("./resources/map/carte2.png").convert_alpha(), (1680, 1120))],
+                  pygame.transform.scale(pygame.image.load("./resources/map/spawn.png").convert_alpha(), (1766, 1177)),
+                  pygame.transform.scale(pygame.image.load("./resources/map/carte2.png").convert_alpha(), (1766, 1177))],
               "colliding": [
-                  pygame.transform.scale(pygame.image.load("./resources/map/spawn_coll.png").convert_alpha(), (1680, 1120)),
-                  pygame.transform.scale(pygame.image.load("./resources/map/coll.png").convert_alpha(), (1680, 1120))],
+                  pygame.transform.scale(pygame.image.load("./resources/map/spawn_coll.png").convert_alpha(), (1766, 1177)),
+                  pygame.transform.scale(pygame.image.load("./resources/map/coll.png").convert_alpha(), (1766, 1177))],
               "foreground": [
-                  pygame.transform.scale(pygame.image.load("./resources/map/spawn_fore.png").convert_alpha(), (1680, 1120)),
-                  pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(), (1680, 1120))],
+                  pygame.transform.scale(pygame.image.load("./resources/map/spawn_fore.png").convert_alpha(), (1766, 1177)),
+                  pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(), (1766, 1177))],
               "collisions": [],
               "ennemiesForMap": [[], []],
-              "changeMapTriggers": [[(pygame.mask.Mask((175, 15), True), 1, 605, 0, 1280 / 2, 720/2, -200, -200)],
+              "changeMapTriggers": [[(pygame.mask.Mask((175, 15), True), 1, 605, 0, 1366 / 2, 912 / 2, -200, -200)],
                                     # list of lists of tuples (mask, mapIndex, maskX, maskY, playerX, playerY, mapX, mapY
-                                    [(pygame.mask.Mask((15, 175), True), 0, 0, 273, 1280 / 2, 0, -200, 0)]]
+                                    [(pygame.mask.Mask((15, 225), True), 0, 0, 472, 1366 / 2, 0, -200, 0)]]
               }
 ennemiesList = []
 
@@ -299,8 +299,8 @@ def manageMovement(player, world, ennemies):
         player["playerYToMove"] = True
         player["playerPos"].y = screen.get_height() / 2 - player["speed"] * 0.017
 
-    if world["worldPos"].y < -400:
-        world["worldPos"].y = -400
+    if world["worldPos"].y < -265:
+        world["worldPos"].y = -265
         player["playerYToMove"] = True
         player["playerPos"].y = screen.get_height() / 2 + player["speed"] * 0.017
 
