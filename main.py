@@ -6,6 +6,10 @@ screen = pygame.display.set_mode((1366, 912))  # , pygame.FULLSCREEN)
 running = True
 clock = pygame.time.Clock()
 dt = 0
+isInMainMenu = True
+isInPauseMenu = False
+font = pygame.font.SysFont("arial", 25)
+mouseMask = pygame.mask.Mask((1, 1), True)
 
 # Constants
 ICONS = {
@@ -15,6 +19,13 @@ ICONS = {
     "1/4Hearth": pygame.transform.scale_by(pygame.image.load("resources/gui/heart-1.png").convert_alpha(), 4),
     "emptyHearth": pygame.transform.scale_by(pygame.image.load("resources/gui/empty_hearth.png").convert_alpha(), 4),
 }
+MAINMENU = {
+    "background": pygame.transform.scale(pygame.image.load("resources/gui/full_heart.png").convert_alpha(),
+                                         (1366, 912)),
+    "buttons": [pygame.Rect(1366 / 2 - 100, 912 / 2, 200, 75)],
+    "text": [("ZeldaNSI", (1366 / 2, 300)),
+             ('Play', (1366 / 2, 912 / 2 + 20))]
+}
 
 # Gameplay values
 playerInfos = {
@@ -22,6 +33,9 @@ playerInfos = {
     "playerSpeed": pygame.Vector2(0, 0),
     "life": 12,
     "maxHealth": 12,
+    "coins": 0,
+    "objects": {},
+    "damage": 50,
     "speed": 200,
     "playerXToMove": False,
     "playerYToMove": False,
@@ -29,6 +43,7 @@ playerInfos = {
     "playerAnimIndex": 0,
     "playerAnimTimer": 0,
     "attacking": False,
+    "ennemiesHit": [],
     "attackTimer": 0,
     "playerTextures": [
         pygame.transform.scale_by(pygame.image.load("resources/character/idle down.png").convert_alpha(), 2),
@@ -184,7 +199,6 @@ def createEnnemy(ennemies, life, rect, sprite, damage=10, viewDistance=100, reac
     }
     ennemies.append(attributes)
 
-
 def manageEnnemies(ennemies, player, world):
     for ennemy in ennemies:
         if player["playerPos"].distance_to(pygame.Vector2(ennemy["rect"].x + ennemy["rect"].width // 2,
@@ -274,6 +288,7 @@ def manageAnimations(player):
         player["attackTimer"] += 1
         if player["attackTimer"] >= 32:
             player["attacking"] = False
+            player["ennemiesHit"].clear()
             player["attackTimer"] = 0
             player["attackCollider"].x = -100
             player["attackCollider"].y = -100
@@ -341,13 +356,13 @@ def manageDisplay(player, world, ennemies):
     screen.blit(world["foreground"][world["worldIndex"]], world["worldPos"])
 
     for hearts in range(player["maxHealth"] // 4):
-        if player["life"] - 4 - 4*hearts >= 0:
+        if player["life"] - 4 - 4 * hearts >= 0:
             screen.blit(ICONS["fullHearth"], (15 + 66 * hearts, 15))
-        elif player["life"] - 3 - 4*hearts >= 0:
+        elif player["life"] - 3 - 4 * hearts >= 0:
             screen.blit(ICONS["3/4Hearth"], (15 + 66 * hearts, 15))
-        elif player["life"] - 2 - 4*hearts >= 0:
+        elif player["life"] - 2 - 4 * hearts >= 0:
             screen.blit(ICONS["2/4Hearth"], (15 + 66 * hearts, 15))
-        elif player["life"] - 1 - 4*hearts >= 0:
+        elif player["life"] - 1 - 4 * hearts >= 0:
             screen.blit(ICONS["1/4Hearth"], (15 + 66 * hearts, 15))
         else:
             screen.blit(ICONS["emptyHearth"], (15 + 66 * hearts, 15))
@@ -379,16 +394,17 @@ def manageCollisions(player, world, ennemies):
             player["playerSpeed"].x = 0
 
     for ennemy in ennemies[:]:
-        if player["attackCollider"].colliderect(ennemy["rect"]):
-            ennemy["life"] -= 50
+        if player["attackCollider"].colliderect(ennemy["rect"]) and not ennemy in player["ennemiesHit"]:
+            player["ennemiesHit"].append(ennemy)
+            ennemy["life"] -= player["damage"]
             if player["playerDir"] == 0:
-                ennemy["rect"].y += 200
+                ennemy["rect"].y += 50
             if player["playerDir"] == 1:
-                ennemy["rect"].y -= 200
+                ennemy["rect"].y -= 50
             if player["playerDir"] == 2:
-                ennemy["rect"].x -= 200
+                ennemy["rect"].x -= 50
             if player["playerDir"] == 3:
-                ennemy["rect"].x += 200
+                ennemy["rect"].x += 50
             if ennemy["life"] <= 0:
                 ennemies.remove(ennemy)
 
@@ -400,7 +416,23 @@ def manageCollisions(player, world, ennemies):
                       pygame.Vector2(mapTrigger[6], mapTrigger[7]))
 
 
-createEnnemy(ennemiesList, 10, pygame.Rect((-100, 50), (50, 50)), "TODO", 1, 500)
+def manageMainMenu(menu):
+    global isInMainMenu
+    pygame.mouse.set_visible(True)
+    screen.fill("black")
+
+    screen.blit(menu["background"], (0, 0))
+    for button in MAINMENU["buttons"]:
+        pygame.draw.rect(screen, "red", button)
+        if button.topleft[0] <= pygame.mouse.get_pos()[0] <= button.bottomright[0] and button.topleft[1] <= pygame.mouse.get_pos()[1] <= button.bottomright[1] and pygame.mouse.get_pressed()[0]:
+            isInMainMenu = False
+
+    for text in menu["text"]:
+        img = font.render(text[0], True, "White")
+        screen.blit(img, (text[1][0] - img.get_width() / 2, text[1][1]))
+
+    pygame.display.flip()
+
 
 while running:
     for event in pygame.event.get():
@@ -410,12 +442,25 @@ while running:
     if pygame.key.get_pressed()[pygame.K_ESCAPE]:
         running = False
 
-    manageControls(pygame.key.get_pressed(), playerInfos)
-    manageAnimations(playerInfos)
-    manageCollisions(playerInfos, worldInfos, ennemiesList)
-    manageMovement(playerInfos, worldInfos, ennemiesList)
-    manageEnnemies(ennemiesList, playerInfos, worldInfos)
-    manageDisplay(playerInfos, worldInfos, ennemiesList)
+    # TODO: correct pause system
+    if pygame.key.get_pressed()[pygame.K_l]:
+        isInPauseMenu = not isInPauseMenu
+
+    if not isInMainMenu and not isInPauseMenu:
+        manageControls(pygame.key.get_pressed(), playerInfos)
+        manageAnimations(playerInfos)
+
+    pygame.mouse.set_visible(isInPauseMenu)
+    if isInPauseMenu:
+        dt = 0
+
+    if not isInMainMenu:
+        manageCollisions(playerInfos, worldInfos, ennemiesList)
+        manageMovement(playerInfos, worldInfos, ennemiesList)
+        manageEnnemies(ennemiesList, playerInfos, worldInfos)
+        manageDisplay(playerInfos, worldInfos, ennemiesList)
+    else:
+        manageMainMenu(MAINMENU)
 
     dt = clock.tick(60) / 1000
 
