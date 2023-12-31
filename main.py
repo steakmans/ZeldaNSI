@@ -2,16 +2,26 @@ import pygame
 
 # Pygame values DO NOT MODIFY
 pygame.init()
-screen = pygame.display.set_mode((1366, 912), pygame.FULLSCREEN)
+screen = pygame.display.set_mode((1366, 912))  # , pygame.FULLSCREEN)
 running = True
 clock = pygame.time.Clock()
 dt = 0
+
+# Constants
+ICONS = {
+    "fullHearth": pygame.transform.scale_by(pygame.image.load("resources/gui/full_heart.png").convert_alpha(), 4),
+    "3/4Hearth": pygame.transform.scale_by(pygame.image.load("resources/gui/heart-3.png").convert_alpha(), 4),
+    "2/4Hearth": pygame.transform.scale_by(pygame.image.load("resources/gui/heart-2.png").convert_alpha(), 4),
+    "1/4Hearth": pygame.transform.scale_by(pygame.image.load("resources/gui/heart-1.png").convert_alpha(), 4),
+    "emptyHearth": pygame.transform.scale_by(pygame.image.load("resources/gui/empty_hearth.png").convert_alpha(), 4),
+}
 
 # Gameplay values
 playerInfos = {
     "playerPos": pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2),
     "playerSpeed": pygame.Vector2(0, 0),
-    "life": 100,
+    "life": 12,
+    "maxHealth": 12,
     "speed": 200,
     "playerXToMove": False,
     "playerYToMove": False,
@@ -82,7 +92,7 @@ playerInfos = {
             "resources/character/attack left 4.png").convert_alpha(), 2),
         pygame.transform.scale_by(pygame.image.load(
             "resources/character/attack right 4.png").convert_alpha(), 2)
-        ],
+    ],
     "playerCollision": [pygame.mask.Mask((20, 5), True),  # top and bottom collision mask
                         pygame.mask.Mask((5, 5), True)],  # left and right collision mask
     "attackCollider": pygame.Rect((-100, -100), (70, 70))
@@ -91,12 +101,15 @@ worldInfos = {"worldPos": pygame.Vector2(-200, -250),
               "worldIndex": 0,
               "background": [
                   pygame.transform.scale(pygame.image.load("./resources/map/spawn.png").convert_alpha(), (1766, 1177)),
-                  pygame.transform.scale(pygame.image.load("./resources/map/carte2.png").convert_alpha(), (1766, 1177))],
+                  pygame.transform.scale(pygame.image.load("./resources/map/carte2.png").convert_alpha(),
+                                         (1766, 1177))],
               "colliding": [
-                  pygame.transform.scale(pygame.image.load("./resources/map/spawn_coll.png").convert_alpha(), (1766, 1177)),
+                  pygame.transform.scale(pygame.image.load("./resources/map/spawn_coll.png").convert_alpha(),
+                                         (1766, 1177)),
                   pygame.transform.scale(pygame.image.load("./resources/map/coll.png").convert_alpha(), (1766, 1177))],
               "foreground": [
-                  pygame.transform.scale(pygame.image.load("./resources/map/spawn_fore.png").convert_alpha(), (1766, 1177)),
+                  pygame.transform.scale(pygame.image.load("./resources/map/spawn_fore.png").convert_alpha(),
+                                         (1766, 1177)),
                   pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(), (1766, 1177))],
               "collisions": [],
               "ennemiesForMap": [[], []],
@@ -136,7 +149,6 @@ def attack(player):
     player["attackCollider"].y = attack_pos.y
 
 
-# TODO : add positions in the tupple
 def changeMap(world, player, ennemies, mapIndex,
               playerPos=pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2),
               worldPos=pygame.Vector2(-200, -200)):
@@ -213,7 +225,7 @@ def manageControls(keys, player):
         attack(player)
 
     if keys[pygame.K_EQUALS]:
-        createEnnemy(ennemiesList, 100, pygame.Rect(player["playerPos"].__copy__(), (50, 50)), "TODO", 100, 100)
+        createEnnemy(ennemiesList, 100, pygame.Rect(player["playerPos"].__copy__(), (50, 50)), "TODO", 2, 100)
 
     if keys[pygame.K_LSHIFT]:
         player["speed"] = 400
@@ -328,6 +340,18 @@ def manageDisplay(player, world, ennemies):
 
     screen.blit(world["foreground"][world["worldIndex"]], world["worldPos"])
 
+    for hearts in range(player["maxHealth"] // 4):
+        if player["life"] - 4 - 4*hearts >= 0:
+            screen.blit(ICONS["fullHearth"], (15 + 66 * hearts, 15))
+        elif player["life"] - 3 - 4*hearts >= 0:
+            screen.blit(ICONS["3/4Hearth"], (15 + 66 * hearts, 15))
+        elif player["life"] - 2 - 4*hearts >= 0:
+            screen.blit(ICONS["2/4Hearth"], (15 + 66 * hearts, 15))
+        elif player["life"] - 1 - 4*hearts >= 0:
+            screen.blit(ICONS["1/4Hearth"], (15 + 66 * hearts, 15))
+        else:
+            screen.blit(ICONS["emptyHearth"], (15 + 66 * hearts, 15))
+
     pygame.display.flip()
 
 
@@ -376,7 +400,7 @@ def manageCollisions(player, world, ennemies):
                       pygame.Vector2(mapTrigger[6], mapTrigger[7]))
 
 
-createEnnemy(ennemiesList, 10, pygame.Rect((-100, 50), (50, 50)), "TODO", 100, 500)
+createEnnemy(ennemiesList, 10, pygame.Rect((-100, 50), (50, 50)), "TODO", 1, 500)
 
 while running:
     for event in pygame.event.get():
