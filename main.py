@@ -2,6 +2,9 @@ import pygame
 
 # Pygame values DO NOT MODIFY
 pygame.init()
+pygame_icon = pygame.image.load('./resources/gui/icon.png')
+pygame.display.set_icon(pygame_icon)
+pygame.display.set_caption("ZeldaNSI")
 screen = pygame.display.set_mode((1366, 912))  # , pygame.FULLSCREEN)
 running = True
 clock = pygame.time.Clock()
@@ -116,21 +119,21 @@ worldInfos = {"worldPos": pygame.Vector2(-200, -250),
               "worldIndex": 0,
               "background": [
                   pygame.transform.scale(pygame.image.load("./resources/map/spawn.png").convert_alpha(), (1766, 1177)),
-                  pygame.transform.scale(pygame.image.load("./resources/map/carte2.png").convert_alpha(),
+                  pygame.transform.scale(pygame.image.load("./resources/map/map1.png").convert_alpha(),
                                          (1766, 1177))],
               "colliding": [
                   pygame.transform.scale(pygame.image.load("./resources/map/spawn_coll.png").convert_alpha(),
                                          (1766, 1177)),
-                  pygame.transform.scale(pygame.image.load("./resources/map/coll.png").convert_alpha(), (1766, 1177))],
+                  pygame.transform.scale(pygame.image.load("./resources/map/map1_coll.png").convert_alpha(), (1766, 1177))],
               "foreground": [
                   pygame.transform.scale(pygame.image.load("./resources/map/spawn_fore.png").convert_alpha(),
                                          (1766, 1177)),
                   pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(), (1766, 1177))],
               "collisions": [],
               "ennemiesForMap": [[], []],
-              "changeMapTriggers": [[(pygame.mask.Mask((175, 15), True), 1, 605, 0, 1366 / 2, 912 / 2, -200, -200)],
+              "changeMapTriggers": [[(pygame.mask.Mask((175, 15), True), 1, 605, 0, 1366 / 2, 870, -230, -265)],
                                     # list of lists of tuples (mask, mapIndex, maskX, maskY, playerX, playerY, mapX, mapY
-                                    [(pygame.mask.Mask((15, 225), True), 0, 0, 472, 1366 / 2, 0, -200, 0)]]
+                                    [(pygame.mask.Mask((175, 15), True), 0, 605, 900, 1366 / 2, 0, -230, 0)]]
               }
 ennemiesList = []
 
@@ -198,6 +201,7 @@ def createEnnemy(ennemies, life, rect, sprite, damage=10, viewDistance=100, reac
         "timeToAttack": timeToAttack
     }
     ennemies.append(attributes)
+
 
 def manageEnnemies(ennemies, player, world):
     for ennemy in ennemies:
@@ -424,7 +428,8 @@ def manageMainMenu(menu):
     screen.blit(menu["background"], (0, 0))
     for button in MAINMENU["buttons"]:
         pygame.draw.rect(screen, "red", button)
-        if button.topleft[0] <= pygame.mouse.get_pos()[0] <= button.bottomright[0] and button.topleft[1] <= pygame.mouse.get_pos()[1] <= button.bottomright[1] and pygame.mouse.get_pressed()[0]:
+        if button.topleft[0] <= pygame.mouse.get_pos()[0] <= button.bottomright[0] and button.topleft[1] <= \
+                pygame.mouse.get_pos()[1] <= button.bottomright[1] and pygame.mouse.get_pressed()[0]:
             isInMainMenu = False
 
     for text in menu["text"]:
