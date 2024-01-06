@@ -1,0 +1,1 @@
+{"playerPos": [955.1999999999971, 456.0], "playerSpeed": [0, 0], "life": 12, "maxHealth": 12, "coins": 0, "objects": {}, "damage": 50, "speed": 200, "playerXToMove": true, "playerYToMove": false, "playerDir": 2, "playerAnimIndex": 2, "playerAnimTimer": 8.0, "attacking": false, "ennemiesHit": [], "attackTimer": 0, "worldIndex": 1, "worldPos": [-400.0, -92.39999999999999]}
