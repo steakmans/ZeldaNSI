@@ -7,7 +7,7 @@ pygame.init()
 pygame_icon = pygame.image.load('./resources/gui/icon.png')
 pygame.display.set_icon(pygame_icon)
 pygame.display.set_caption("ZeldaNSI")
-screen = pygame.display.set_mode((1366, 912))  # , pygame.FULLSCREEN)
+screen = pygame.display.set_mode((1366, 912) , flags=pygame.FULLSCREEN | pygame.NOFRAME)
 running = True
 clock = pygame.time.Clock()
 dt = 0
@@ -31,19 +31,19 @@ ICONS = {
 MAIN_MENU = {
     "background": pygame.transform.scale(pygame.image.load("resources/gui/full_heart.png").convert_alpha(),
                                          (1366, 912)),
-    "buttons": [(pygame.Rect(1366 / 2 - 150, 912 / 2 + 50, 300, 90), "Nouvelle partie"),
+    "buttons": ((pygame.Rect(1366 / 2 - 150, 912 / 2 + 50, 300, 90), "Nouvelle partie"),
                 (pygame.Rect(1366 / 2 - 150, 912 / 2 + 200, 300, 90), "Quitter"),
-                (pygame.Rect(1366 / 2 - 150, 912 / 2 - 100, 300, 90), "Reprendre")],
-    "text": [("ZeldaNSI", (1366 / 2, 200), True)]
+                (pygame.Rect(1366 / 2 - 150, 912 / 2 - 100, 300, 90), "Reprendre")),
+    "text": (("ZeldaNSI", (1366 / 2, 200), True),)
 }
 
 TITLE_MUSIC = "resources/music/title_theme.mp3"
 
-PAUSE_MENU_BUTTONS = [(pygame.Rect(screen.get_width() / 2 - 150, 400, 300, 90), "Reprendre"),
-                      (pygame.Rect(screen.get_width() / 2 - 150, 550, 300, 90), "Retourner au menu")]
+PAUSE_MENU_BUTTONS = ((pygame.Rect(screen.get_width() / 2 - 150, 400, 300, 90), "Reprendre"),
+                      (pygame.Rect(screen.get_width() / 2 - 150, 550, 300, 90), "Retourner au menu"))
 
 PLAYER_CONSTS = {
-    "playerTextures": [
+    "playerTextures": (
         pygame.transform.scale_by(pygame.image.load("resources/character/idle down.png").convert_alpha(), 2),
         pygame.transform.scale_by(pygame.image.load("resources/character/idle up.png").convert_alpha(), 2),
         pygame.transform.scale_by(pygame.image.load("resources/character/idle left.png").convert_alpha(), 2),
@@ -105,9 +105,9 @@ PLAYER_CONSTS = {
             "resources/character/attack left 4.png").convert_alpha(), 2),
         pygame.transform.scale_by(pygame.image.load(
             "resources/character/attack right 4.png").convert_alpha(), 2)
-    ],
-    "playerCollision": [pygame.mask.Mask((20, 5), True),  # top and bottom collision mask
-                        pygame.mask.Mask((5, 5), True)],  # left and right collision mask
+    ),
+    "playerCollision": (pygame.mask.Mask((20, 5), True),  # top and bottom collision mask
+                        pygame.mask.Mask((5, 5), True)),  # left and right collision mask
     "attackCollider": pygame.Rect((-100, -100), (70, 70))
 }
 
@@ -132,26 +132,31 @@ playerInfos = {
 }
 worldInfos = {"worldPos": pygame.Vector2(-200, -250),
               "worldIndex": 0,
-              "music": ["resources/music/spawn_village_theme.mp3",
-                        "resources/music/field_theme.mp3"],
-              "background": [
+              "music": ("resources/music/spawn_village_theme.mp3",
+                        "resources/music/field_theme.mp3"),
+              "background": (
                   pygame.transform.scale(pygame.image.load("./resources/map/spawn.png").convert_alpha(), (1766, 1177)),
                   pygame.transform.scale(pygame.image.load("./resources/map/map1.png").convert_alpha(),
-                                         (1766, 1177))],
-              "colliding": [
+                                         (1766, 1177))
+                  ),
+              "colliding": (
                   pygame.transform.scale(pygame.image.load("./resources/map/spawn_coll.png").convert_alpha(),
                                          (1766, 1177)),
                   pygame.transform.scale(pygame.image.load("./resources/map/map1_coll.png").convert_alpha(),
-                                         (1766, 1177))],
-              "foreground": [
+                                         (1766, 1177))
+                  ),
+              "foreground": (
                   pygame.transform.scale(pygame.image.load("./resources/map/spawn_fore.png").convert_alpha(),
                                          (1766, 1177)),
-                  pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(), (1766, 1177))],
+                  pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(), (1766, 1177))
+                  ),
               "collisions": [],
-              "ennemiesForMap": [[], []],
-              "changeMapTriggers": [[(pygame.mask.Mask((175, 15), True), 1, 605, 0, 1366 / 2, 870, -230, -265)],
-                                    # list of lists of tuples (mask, mapIndex, maskX, maskY, playerX, playerY, mapX, mapY
-                                    [(pygame.mask.Mask((175, 15), True), 0, 605, 900, 1366 / 2, 0, -230, 0)]]
+              "ennemiesForMap": ((), ()),
+              "changeMapTriggers": (((pygame.mask.Mask((175, 15), True), 1, 605, 0, 1366 / 2, 870, -230, -265),),
+                                    # tuple of tuples(map index) of tuples (mask, mapIndex, maskX, maskY, destPlayerX, destPlayerY, destMapX, destMapY)
+                                    ((pygame.mask.Mask((175, 15), True), 0, 605, 900, 1366 / 2, 0, -230, 0),)),
+              "interactables":(# tuple of tuples(map index) of tuples (mask, action, maskX, maskY)
+                  (), ((pygame.mask.Mask((75, 75), True), print, 1555, 475), )) #TODO ceate action functions
               }
 ennemiesList = []
 
@@ -267,7 +272,7 @@ def manageControls(keys, player):
         attack(player)
 
     if keys[pygame.K_EQUALS]:
-        createEnnemy(ennemiesList, 100, pygame.Rect(player["playerPos"].__copy__(), (50, 50)), "TODO", 2, 100)
+        createEnnemy(ennemiesList, 100, pygame.Rect(player["playerPos"].__copy__(), (50, 50)), "TODO", 2, timeToAttack=1)
 
     if keys[pygame.K_LSHIFT]:
         player["speed"] = 400
@@ -396,6 +401,11 @@ def manageDisplay(player, world, ennemies, needFlip):
         else:
             screen.blit(ICONS["emptyHearth"], (15 + 66 * hearts, 15))
 
+    if world["worldIndex"] == 1:
+        rect = world["interactables"][1][0].get_rect()
+        rect.move_ip((world["interactables"][1][2] + world["worldPos"][0], world["interactables"][1][3]+ world["worldPos"][1]))
+        pygame.draw.rect(screen, (255,255, 255), rect)
+
     if needFlip:
         pygame.display.flip()
 
@@ -445,6 +455,11 @@ def manageCollisions(player, world, ennemies):
                                   player["playerPos"].y - mapTrigger[3] + 20)):
             changeMap(world, player, ennemies, mapTrigger[1], pygame.Vector2(mapTrigger[4], mapTrigger[5]),
                       pygame.Vector2(mapTrigger[6], mapTrigger[7]))
+    for interactable in world["interactables"][world["worldIndex"]]:
+        if interactable[0].overlap(PLAYER_CONSTS["playerCollision"][0],
+                                 (player["playerPos"].x - 7 - mapTrigger[2],
+                                  player["playerPos"].y - mapTrigger[3] + 20)):
+            interactable[1]("test")
 
 
 def manageMainMenu(menu, world, player, ennemies):
@@ -472,15 +487,19 @@ def manageMainMenu(menu, world, player, ennemies):
         if button[0].topleft[0] <= pygame.mouse.get_pos()[0] <= button[0].bottomright[0] and button[0].topleft[1] <= \
                 pygame.mouse.get_pos()[1] <= button[0].bottomright[1] and pygame.mouse.get_pressed()[0]:
 
-            if button[1] == "Nouvelle partie" and timeDelay >= 30 :
+            if button[1] == "Nouvelle partie" and timeDelay >= 15 :
                 isInMainMenu = False
                 isInPauseMenu = False
                 pygame.mixer.music.stop()
                 pygame.mixer.music.load(world["music"][0])
                 pygame.mixer.music.play(-1, 0, 0)
+                player["playerPos"] = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
+                player["playerDir"] = 0
+                player["attacking"] = False
+                world["worldPos"] = pygame.Vector2(-200, -250)
                 changeMap(world, player, ennemies, 0, worldPos=pygame.Vector2(-200, -250))
 
-            if button[1] == "Reprendre" and timeDelay >= 30 and exists("save/save.json"):
+            if button[1] == "Reprendre" and timeDelay >= 15 and exists("save/save.json"):
                 isInMainMenu = False
                 isInPauseMenu = False
                 pygame.mixer.music.stop()
@@ -531,23 +550,23 @@ def managePauseMenu(player, world, ennemies, buttons):
 
 def saveGame(world, player):
     with open("save/save.json", "w") as file:
-        dict = player.copy()
-        dict["playerPos"] = (player["playerPos"].x, player["playerPos"].y)
-        dict["playerSpeed"] = (0, 0)
-        dict["worldIndex"] = world["worldIndex"]
-        dict["worldPos"] = (world["worldPos"].x, world["worldPos"].y)
-        json.dump(dict, file)
+        dict_prov = player.copy()
+        dict_prov["playerPos"] = (player["playerPos"].x, player["playerPos"].y)
+        dict_prov["playerSpeed"] = (0, 0)
+        dict_prov["worldIndex"] = world["worldIndex"]
+        dict_prov["worldPos"] = (world["worldPos"].x, world["worldPos"].y)
+        json.dump(dict_prov, file)
 
 def loadGame(world, player):
     with open("save/save.json", "r") as file:
-        dict = json.loads(file.read())
-        world["worldPos"] = pygame.Vector2(dict["worldPos"][0], dict["worldPos"][1])
-        world["worldIndex"] = dict["worldIndex"]
-        player = dict.copy()
-        player["playerPos"] = pygame.Vector2(dict["playerPos"][0], dict["playerPos"][1])
+        dict_prov = json.loads(file.read())
+        world["worldPos"] = pygame.Vector2(dict_prov["worldPos"][0], dict_prov["worldPos"][1])
+        world["worldIndex"] = dict_prov["worldIndex"]
+        player = dict_prov.copy()
+        player["playerPos"] = pygame.Vector2(dict_prov["playerPos"][0], dict_prov["playerPos"][1])
         player["playerSpeed"] = pygame.Vector2(0, 0)
+        player["life"] = dict_prov["life"]
         del player["worldIndex"], player["worldPos"]
-
 
 while running:
     for event in pygame.event.get():
@@ -565,7 +584,7 @@ while running:
         manageControls(pygame.key.get_pressed(), playerInfos)
         manageAnimations(playerInfos)
 
-    pygame.mouse.set_visible(isInPauseMenu)
+    pygame.mouse.set_visible(isInPauseMenu or isInMainMenu)
     if isInPauseMenu:
         dt = 0
 
