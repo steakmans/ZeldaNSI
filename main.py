@@ -1,3 +1,5 @@
+import time
+
 import pygame
 import json
 from os.path import exists
@@ -7,7 +9,7 @@ pygame.init()
 pygame_icon = pygame.image.load('./resources/gui/icon.png')
 pygame.display.set_icon(pygame_icon)
 pygame.display.set_caption("ZeldaNSI")
-screen = pygame.display.set_mode((1366, 912) , flags=pygame.FULLSCREEN | pygame.NOFRAME)
+screen = pygame.display.set_mode((1366, 912))  # , flags=pygame.FULLSCREEN | pygame.NOFRAME)
 running = True
 clock = pygame.time.Clock()
 dt = 0
@@ -19,6 +21,8 @@ timeDelay = 30
 fontTitle = pygame.font.SysFont("arial", 75)
 fontButton = pygame.font.SysFont("arial", 30)
 mouseMask = pygame.mask.Mask((1, 1), True)
+pygame.mixer.music.set_volume(0.1)
+textToShow = []
 
 # Constants
 ICONS = {
@@ -27,6 +31,9 @@ ICONS = {
     "2/4Hearth": pygame.transform.scale_by(pygame.image.load("resources/gui/heart-2.png").convert_alpha(), 4),
     "1/4Hearth": pygame.transform.scale_by(pygame.image.load("resources/gui/heart-1.png").convert_alpha(), 4),
     "emptyHearth": pygame.transform.scale_by(pygame.image.load("resources/gui/empty_hearth.png").convert_alpha(), 4),
+    "bubble": pygame.transform.scale(pygame.image.load("resources/gui/bubble.png").convert_alpha(), (1366, 912 / 4)),
+    "chest_closed": pygame.transform.scale_by(pygame.image.load("resources/map/chest_closed.png").convert_alpha(), 4),
+    "chest_opened": pygame.transform.scale_by(pygame.image.load("resources/map/chest_opened.png").convert_alpha(), 4)
 }
 MAIN_MENU = {
     "background": pygame.transform.scale(pygame.image.load("resources/gui/full_heart.png").convert_alpha(),
@@ -41,6 +48,29 @@ TITLE_MUSIC = "resources/music/title_theme.mp3"
 
 PAUSE_MENU_BUTTONS = ((pygame.Rect(screen.get_width() / 2 - 150, 400, 300, 90), "Reprendre"),
                       (pygame.Rect(screen.get_width() / 2 - 150, 550, 300, 90), "Retourner au menu"))
+
+SNAKE_TEXTURES = [
+    pygame.transform.scale_by(pygame.image.load("resources/ennemies/snake/snake_idle1.png").convert_alpha(), 3),
+    pygame.transform.scale_by(pygame.image.load("resources/ennemies/snake/snake_idle2.png").convert_alpha(), 3),
+    pygame.transform.scale_by(pygame.image.load("resources/ennemies/snake/snake_idle3.png").convert_alpha(), 3),
+    pygame.transform.scale_by(pygame.image.load("resources/ennemies/snake/snake_idle4.png").convert_alpha(), 3),
+    pygame.transform.scale_by(pygame.image.load("resources/ennemies/snake/snake_walk1.png").convert_alpha(), 3),
+    pygame.transform.scale_by(pygame.image.load("resources/ennemies/snake/snake_walk2.png").convert_alpha(), 3),
+    pygame.transform.scale_by(pygame.image.load("resources/ennemies/snake/snake_walk3.png").convert_alpha(), 3),
+    pygame.transform.scale_by(pygame.image.load("resources/ennemies/snake/snake_walk4.png").convert_alpha(), 3),
+    pygame.transform.scale_by(pygame.image.load("resources/ennemies/snake/snake_attack1.png").convert_alpha(), 3),
+    pygame.transform.scale_by(pygame.image.load("resources/ennemies/snake/snake_attack2.png").convert_alpha(), 3),
+    pygame.transform.scale_by(pygame.image.load("resources/ennemies/snake/snake_attack3.png").convert_alpha(), 3),
+    pygame.transform.scale_by(pygame.image.load("resources/ennemies/snake/snake_attack4.png").convert_alpha(), 3),
+    pygame.transform.scale_by(pygame.image.load("resources/ennemies/snake/snake_attack5.png").convert_alpha(), 3),
+    pygame.transform.scale_by(pygame.image.load("resources/ennemies/snake/snake_attack6.png").convert_alpha(), 3),
+    pygame.transform.scale_by(pygame.image.load("resources/ennemies/snake/snake_hurt1.png").convert_alpha(), 3),
+    pygame.transform.scale_by(pygame.image.load("resources/ennemies/snake/snake_hurt2.png").convert_alpha(), 3),
+    pygame.transform.scale_by(pygame.image.load("resources/ennemies/snake/snake_death1.png").convert_alpha(), 3),
+    pygame.transform.scale_by(pygame.image.load("resources/ennemies/snake/snake_death2.png").convert_alpha(), 3),
+    pygame.transform.scale_by(pygame.image.load("resources/ennemies/snake/snake_death3.png").convert_alpha(), 3),
+    pygame.transform.scale_by(pygame.image.load("resources/ennemies/snake/snake_death4.png").convert_alpha(), 3),
+]
 
 PLAYER_CONSTS = {
     "playerTextures": (
@@ -130,6 +160,27 @@ playerInfos = {
     "ennemiesHit": [],
     "attackTimer": 0,
 }
+
+
+# World related objects
+def showMessageOnScreen(texts):
+    global textToShow
+    for txt in texts:
+        textToShow.append((txt, time.time() + 5))
+
+
+def openChest(id):
+    global worldInfos, playerInfos
+    if not worldInfos["chests"][worldInfos["worldIndex"]][id][1]:
+        if worldInfos["chests"][worldInfos["worldIndex"]][id][0][0] in playerInfos["objects"]:
+            playerInfos["objects"][worldInfos["chests"][worldInfos["worldIndex"]][id][0][0]] += \
+                worldInfos["chests"][worldInfos["worldIndex"]][id][0][1]
+        else:
+            playerInfos["objects"][worldInfos["chests"][worldInfos["worldIndex"]][id][0][0]] = \
+                worldInfos["chests"][worldInfos["worldIndex"]][id][0][1]
+        worldInfos["chests"][worldInfos["worldIndex"]][id][1] = True
+
+
 worldInfos = {"worldPos": pygame.Vector2(-200, -250),
               "worldIndex": 0,
               "music": ("resources/music/spawn_village_theme.mp3",
@@ -138,25 +189,27 @@ worldInfos = {"worldPos": pygame.Vector2(-200, -250),
                   pygame.transform.scale(pygame.image.load("./resources/map/spawn.png").convert_alpha(), (1766, 1177)),
                   pygame.transform.scale(pygame.image.load("./resources/map/map1.png").convert_alpha(),
                                          (1766, 1177))
-                  ),
+              ),
               "colliding": (
                   pygame.transform.scale(pygame.image.load("./resources/map/spawn_coll.png").convert_alpha(),
                                          (1766, 1177)),
                   pygame.transform.scale(pygame.image.load("./resources/map/map1_coll.png").convert_alpha(),
                                          (1766, 1177))
-                  ),
+              ),
               "foreground": (
                   pygame.transform.scale(pygame.image.load("./resources/map/spawn_fore.png").convert_alpha(),
                                          (1766, 1177)),
                   pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(), (1766, 1177))
-                  ),
+              ),
               "collisions": [],
               "ennemiesForMap": ((), ()),
               "changeMapTriggers": (((pygame.mask.Mask((175, 15), True), 1, 605, 0, 1366 / 2, 870, -230, -265),),
                                     # tuple of tuples(map index) of tuples (mask, mapIndex, maskX, maskY, destPlayerX, destPlayerY, destMapX, destMapY)
                                     ((pygame.mask.Mask((175, 15), True), 0, 605, 900, 1366 / 2, 0, -230, 0),)),
-              "interactables":(# tuple of tuples(map index) of tuples (mask, action, maskX, maskY)
-                  (), ((pygame.mask.Mask((75, 75), True), print, 1555, 475), )) #TODO ceate action functions
+              "interactables": (  # tuple of tuples(map index) of tuples (mask, action, maskX, maskY)
+                  (), ((pygame.mask.Mask((75, 75), True), showMessageOnScreen, 1555, 475, ("test", "ligne2")),
+                       (pygame.mask.Mask((75, 75), True), openChest, 875, 125, 0))),
+              "chests": [[], [[("sword", 1), False, (875, 95)]]]
               }
 ennemiesList = []
 
@@ -192,7 +245,7 @@ def attack(player):
 
 def changeMap(world, player, ennemies, mapIndex,
               playerPos=pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2),
-              worldPos=pygame.Vector2(-200, -200), spawnEnnemies=True, forceMusic = False):
+              worldPos=pygame.Vector2(-200, -200), spawnEnnemies=True, forceMusic=False):
     if world["worldIndex"] == mapIndex:
         return
 
@@ -217,16 +270,20 @@ def changeMap(world, player, ennemies, mapIndex,
             ennemies.append(ennemy)
 
 
-def createEnnemy(ennemies, life, rect, sprite, damage=10, viewDistance=100, reachDistance=15, timeToAttack=3):
+def createEnnemy(ennemies, type, life, rect, damage=10, viewDistance=100, reachDistance=15, timeToAttack=3):
     attributes = {
+        "type": type,
         "life": life,
         "damage": damage,
         "playerDetected": False,
         "viewDistance": viewDistance,
         "reachDistance": reachDistance,
         "rect": rect,
-        "sprite": sprite,
+        "animIndex": 0,
         "attackTimer": 0,
+        "attacking": False,
+        "animTimer": 0,
+        "hurtTimer": 0,
         "timeToAttack": timeToAttack
     }
     ennemies.append(attributes)
@@ -260,19 +317,24 @@ def manageEnnemies(ennemies, player, world):
                                                           ennemy["rect"].y + ennemy["rect"].height // 2)) <= ennemy[
             "reachDistance"]:
             ennemy["attackTimer"] += dt
+            if ennemy["attackTimer"] >= ennemy["timeToAttack"] - 0.45 and ennemy["type"] == 0:
+                ennemy["attacking"] = True
             if ennemy["attackTimer"] >= ennemy["timeToAttack"]:
                 ennemy["attackTimer"] = 0
                 player["life"] -= ennemy["damage"]
+        else:
+            ennemy["attackTimer"] = 0
 
 
 def manageControls(keys, player):
-    if keys[pygame.K_SPACE] and not player["attacking"]:
+    if keys[pygame.K_SPACE] and not player["attacking"] and "sword" in player["objects"]:
         player["attacking"] = True
         player["playerAnimIndex"] = 16 + player["playerDir"]
         attack(player)
 
     if keys[pygame.K_EQUALS]:
-        createEnnemy(ennemiesList, 100, pygame.Rect(player["playerPos"].__copy__(), (50, 50)), "TODO", 2, timeToAttack=1)
+        createEnnemy(ennemiesList,0, 100, pygame.Rect(player["playerPos"].__copy__(), (50, 50)), 2,
+                     timeToAttack=1)
 
     if keys[pygame.K_LSHIFT]:
         player["speed"] = 400
@@ -379,8 +441,47 @@ def manageDisplay(player, world, ennemies, needFlip):
     screen.blit(world["background"][world["worldIndex"]], world["worldPos"])
     screen.blit(world["colliding"][world["worldIndex"]], world["worldPos"])
 
+    for i in range(len(world["chests"][world["worldIndex"]])):
+        if world["chests"][world["worldIndex"]][i][1]:
+            screen.blit(ICONS["chest_opened"], (
+                world["chests"][world["worldIndex"]][i][2][0] + world["worldPos"][0] - 23,
+                world["chests"][world["worldIndex"]][i][2][1] + world["worldPos"][1] - 32))
+        else:
+            screen.blit(ICONS["chest_closed"], (
+                world["chests"][world["worldIndex"]][i][2][0] + world["worldPos"][0] - 23,
+                world["chests"][world["worldIndex"]][i][2][1] + world["worldPos"][1]))
+
     for ennemy in ennemies:
-        pygame.draw.rect(screen, (255, 0, 0), ennemy["rect"])
+        if ennemy["type"] == 0:
+            if ennemy["playerDetected"]:
+                index = 0 + ennemy["animIndex"]
+                if ennemy["hurtTimer"] > 0:
+                    index = 14 + ennemy["animIndex"]
+                    if ennemy["animIndex"] > 1:
+                        ennemy["animIndex"] = 0
+                    if ennemy["hurtTimer"] >= 2:
+                        ennemy["hurtTimer"] = 0
+                    else:
+                        ennemy["hurtTimer"] += dt
+                elif ennemy["attacking"]:
+                    index = 8 + ennemy["animIndex"]
+                    if ennemy["animIndex"] > 5:
+                        ennemy["animIndex"] = 0
+                        ennemy["attacking"] = False
+                elif abs(ennemy["rect"].x - player["playerPos"].x) > 30 or abs(ennemy["rect"].y - player["playerPos"].y) > 30:
+                    index = 4 + ennemy["animIndex"]
+                    if ennemy["animIndex"] > 3:
+                        ennemy["animIndex"] = 0
+                elif ennemy["animIndex"] > 3:
+                        ennemy["animIndex"] = 0
+                if ennemy["rect"].x <= player["playerPos"].x - 20:
+                    screen.blit(pygame.transform.flip(SNAKE_TEXTURES[index], True, False), (ennemy["rect"].x - 32, ennemy["rect"].y - 32))
+                else:
+                    screen.blit(SNAKE_TEXTURES[index], (ennemy["rect"].x - 32, ennemy["rect"].y - 32))
+        if ennemy["animTimer"] > 8:
+            ennemy["animIndex"] += 1
+            ennemy["animTimer"] = 0
+        ennemy["animTimer"] += 1
 
     playerPos = player["playerPos"].__copy__()
     playerPos.x -= 30
@@ -401,10 +502,11 @@ def manageDisplay(player, world, ennemies, needFlip):
         else:
             screen.blit(ICONS["emptyHearth"], (15 + 66 * hearts, 15))
 
-    if world["worldIndex"] == 1:
-        rect = world["interactables"][1][0].get_rect()
-        rect.move_ip((world["interactables"][1][2] + world["worldPos"][0], world["interactables"][1][3]+ world["worldPos"][1]))
-        pygame.draw.rect(screen, (255,255, 255), rect)
+    if len(textToShow) > 0:
+        screen.blit(ICONS["bubble"], (0, (3 / 4) * screen.get_height()))
+        for i in range(len(textToShow)):
+            img = fontButton.render(textToShow[i][0], True, "black")
+            screen.blit(img, (35, (3 / 4) * screen.get_height() + 15 + i * 50))
 
     if needFlip:
         pygame.display.flip()
@@ -435,9 +537,10 @@ def manageCollisions(player, world, ennemies):
             player["playerSpeed"].x = 0
 
     for ennemy in ennemies[:]:
-        if PLAYER_CONSTS["attackCollider"].colliderect(ennemy["rect"]) and not ennemy in player["ennemiesHit"]:
+        if PLAYER_CONSTS["attackCollider"].colliderect(ennemy["rect"]) and ennemy not in player["ennemiesHit"]:
             player["ennemiesHit"].append(ennemy)
             ennemy["life"] -= player["damage"]
+            ennemy["hurtTimer"] = 1
             if player["playerDir"] == 0:
                 ennemy["rect"].y += 50
             if player["playerDir"] == 1:
@@ -455,11 +558,6 @@ def manageCollisions(player, world, ennemies):
                                   player["playerPos"].y - mapTrigger[3] + 20)):
             changeMap(world, player, ennemies, mapTrigger[1], pygame.Vector2(mapTrigger[4], mapTrigger[5]),
                       pygame.Vector2(mapTrigger[6], mapTrigger[7]))
-    for interactable in world["interactables"][world["worldIndex"]]:
-        if interactable[0].overlap(PLAYER_CONSTS["playerCollision"][0],
-                                 (player["playerPos"].x - 7 - mapTrigger[2],
-                                  player["playerPos"].y - mapTrigger[3] + 20)):
-            interactable[1]("test")
 
 
 def manageMainMenu(menu, world, player, ennemies):
@@ -478,7 +576,7 @@ def manageMainMenu(menu, world, player, ennemies):
             pygame.draw.rect(screen, "red", button[0])
             img = fontButton.render(button[1], True, "white")
             screen.blit(img, (button[0].x + button[0].width / 2 - img.get_width() / 2,
-                          button[0].y + button[0].height / 2 - img.get_height() / 2))
+                              button[0].y + button[0].height / 2 - img.get_height() / 2))
         elif exists("save/save.json"):
             pygame.draw.rect(screen, "red", button[0])
             img = fontButton.render(button[1], True, "white")
@@ -487,7 +585,7 @@ def manageMainMenu(menu, world, player, ennemies):
         if button[0].topleft[0] <= pygame.mouse.get_pos()[0] <= button[0].bottomright[0] and button[0].topleft[1] <= \
                 pygame.mouse.get_pos()[1] <= button[0].bottomright[1] and pygame.mouse.get_pressed()[0]:
 
-            if button[1] == "Nouvelle partie" and timeDelay >= 15 :
+            if button[1] == "Nouvelle partie" and timeDelay >= 15:
                 isInMainMenu = False
                 isInPauseMenu = False
                 pygame.mixer.music.stop()
@@ -503,7 +601,7 @@ def manageMainMenu(menu, world, player, ennemies):
                 isInMainMenu = False
                 isInPauseMenu = False
                 pygame.mixer.music.stop()
-                loadGame(world, player)
+                loadGame()
                 pygame.mixer.music.load(world["music"][world["worldIndex"]])
                 pygame.mixer.music.play(-1, 0, 0)
                 changeMap(world, player, ennemies, world["worldIndex"], worldPos=pygame.Vector2(-200, -250))
@@ -549,29 +647,57 @@ def managePauseMenu(player, world, ennemies, buttons):
 
 
 def saveGame(world, player):
-    with open("save/save.json", "w") as file:
-        dict_prov = player.copy()
-        dict_prov["playerPos"] = (player["playerPos"].x, player["playerPos"].y)
-        dict_prov["playerSpeed"] = (0, 0)
-        dict_prov["worldIndex"] = world["worldIndex"]
-        dict_prov["worldPos"] = (world["worldPos"].x, world["worldPos"].y)
-        json.dump(dict_prov, file)
+    try:
+        with open("save/save.json", "w") as file:
+            dict_prov = player.copy()
+            dict_prov["playerPos"] = (player["playerPos"].x, player["playerPos"].y)
+            dict_prov["playerSpeed"] = (0, 0)
+            dict_prov["worldIndex"] = world["worldIndex"]
+            dict_prov["worldPos"] = (world["worldPos"].x, world["worldPos"].y)
+            dict_prov["chests"] = worldInfos["chests"]
+            del dict_prov["ennemiesHit"]
+            json.dump(dict_prov, file)
+            file.close()
+            print("Saved game")
+    except FileNotFoundError:
+        print("Save file was not found")
 
-def loadGame(world, player):
-    with open("save/save.json", "r") as file:
-        dict_prov = json.loads(file.read())
-        world["worldPos"] = pygame.Vector2(dict_prov["worldPos"][0], dict_prov["worldPos"][1])
-        world["worldIndex"] = dict_prov["worldIndex"]
-        player = dict_prov.copy()
-        player["playerPos"] = pygame.Vector2(dict_prov["playerPos"][0], dict_prov["playerPos"][1])
-        player["playerSpeed"] = pygame.Vector2(0, 0)
-        player["life"] = dict_prov["life"]
-        del player["worldIndex"], player["worldPos"]
+
+def loadGame():
+    global playerInfos, worldInfos
+    try:
+        with open("save/save.json", "r") as file:
+            dict_prov = json.loads(file.read())
+            worldInfos["worldPos"] = pygame.Vector2(dict_prov["worldPos"][0], dict_prov["worldPos"][1])
+            worldInfos["worldIndex"] = dict_prov["worldIndex"]
+            worldInfos["chests"] = dict_prov["chests"]
+            playerInfos = dict_prov.copy()
+            playerInfos["playerPos"] = pygame.Vector2(dict_prov["playerPos"][0], dict_prov["playerPos"][1])
+            playerInfos["playerSpeed"] = pygame.Vector2(0, 0)
+            playerInfos["life"] = dict_prov["life"]
+            playerInfos["ennemiesHit"] = []
+            del playerInfos["worldIndex"], playerInfos["worldPos"], playerInfos["chests"]
+            file.close()
+            print("Loaded save file")
+    except FileNotFoundError:
+        print("Save file was not found")
+
+
+def manageInteractables(world, player):
+    for interactable in world["interactables"][world["worldIndex"]]:
+        if interactable[0].overlap(PLAYER_CONSTS["playerCollision"][0],
+                                   (player["playerPos"].x - 7 - interactable[2] - world["worldPos"][0],
+                                    player["playerPos"].y - interactable[3] + 20 - world["worldPos"][1])):
+            interactable[1](interactable[4])
+
 
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_e:
+                manageInteractables(worldInfos, playerInfos)
 
     if pygame.key.get_pressed()[pygame.K_ESCAPE] and not isInMainMenu:
         if not isPauseKeyPressed:
@@ -598,6 +724,9 @@ while running:
         manageEnnemies(ennemiesList, playerInfos, worldInfos)
         manageDisplay(playerInfos, worldInfos, ennemiesList, True)
 
+    for text in textToShow.copy():
+        if text[1] < time.time():
+            textToShow.remove(text)
     dt = clock.tick(60) / 1000
     timeDelay += 1
 
