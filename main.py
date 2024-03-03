@@ -13,6 +13,7 @@ screen = pygame.display.set_mode((1366, 912))  # , flags=pygame.FULLSCREEN | pyg
 running = True
 clock = pygame.time.Clock()
 dt = 0
+timer = 0
 isInMainMenu = True
 isInPauseMenu = False
 isPauseKeyPressed = False
@@ -45,6 +46,7 @@ MAIN_MENU = {
 }
 
 TITLE_MUSIC = "resources/music/title_theme.mp3"
+DEATH_MUSIC = "resources/music/death.mp3"
 
 PAUSE_MENU_BUTTONS = ((pygame.Rect(screen.get_width() / 2 - 150, 400, 300, 90), "Reprendre"),
                       (pygame.Rect(screen.get_width() / 2 - 150, 550, 300, 90), "Retourner au menu"))
@@ -179,6 +181,7 @@ def openChest(id):
             playerInfos["objects"][worldInfos["chests"][worldInfos["worldIndex"]][id][0][0]] = \
                 worldInfos["chests"][worldInfos["worldIndex"]][id][0][1]
         worldInfos["chests"][worldInfos["worldIndex"]][id][1] = True
+        showMessageOnScreen(("Vous avez obtenu " + str(worldInfos["chests"][worldInfos["worldIndex"]][id][0][1]) + " "+ worldInfos["chests"][worldInfos["worldIndex"]][id][0][0],))
 
 
 worldInfos = {"worldPos": pygame.Vector2(-200, -250),
@@ -209,7 +212,7 @@ worldInfos = {"worldPos": pygame.Vector2(-200, -250),
               "interactables": (  # tuple of tuples(map index) of tuples (mask, action, maskX, maskY)
                   (), ((pygame.mask.Mask((75, 75), True), showMessageOnScreen, 1555, 475, ("test", "ligne2")),
                        (pygame.mask.Mask((75, 75), True), openChest, 875, 125, 0))),
-              "chests": [[], [[("sword", 1), False, (875, 95)]]]
+              "chests": [[], [[("épée", 1), False, (875, 95)]]]
               }
 ennemiesList = []
 
@@ -245,11 +248,12 @@ def attack(player):
 
 def changeMap(world, player, ennemies, mapIndex,
               playerPos=pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2),
-              worldPos=pygame.Vector2(-200, -200), spawnEnnemies=True, forceMusic=False):
-    if world["worldIndex"] == mapIndex:
+              worldPos=pygame.Vector2(-200, -200), spawnEnnemies=True, forceMusic=False, forceChange=False):
+    if world["worldIndex"] == mapIndex and not forceChange:
         return
 
     if world["music"][world["worldIndex"]] != world["music"][mapIndex] or forceMusic:
+        pygame.mixer.music.stop()
         pygame.mixer.music.load(world["music"][mapIndex])
         pygame.mixer.music.play(-1, 0, 0)
 
@@ -322,12 +326,16 @@ def manageEnnemies(ennemies, player, world):
             if ennemy["attackTimer"] >= ennemy["timeToAttack"]:
                 ennemy["attackTimer"] = 0
                 player["life"] -= ennemy["damage"]
+                if player["life"] <= 0:
+                    pygame.mixer.music.stop()
+                    pygame.mixer.music.load(DEATH_MUSIC, "mp3")
+                    pygame.mixer.music.play(1, 0, 0)
         else:
             ennemy["attackTimer"] = 0
 
 
 def manageControls(keys, player):
-    if keys[pygame.K_SPACE] and not player["attacking"] and "sword" in player["objects"]:
+    if keys[pygame.K_SPACE] and not player["attacking"] and "épée" in player["objects"]:
         player["attacking"] = True
         player["playerAnimIndex"] = 16 + player["playerDir"]
         attack(player)
@@ -506,7 +514,7 @@ def manageDisplay(player, world, ennemies, needFlip):
         screen.blit(ICONS["bubble"], (0, (3 / 4) * screen.get_height()))
         for i in range(len(textToShow)):
             img = fontButton.render(textToShow[i][0], True, "black")
-            screen.blit(img, (35, (3 / 4) * screen.get_height() + 15 + i * 50))
+            screen.blit(img, (35, (3 / 4) * screen.get_height() + 25 + i * 50))
 
     if needFlip:
         pygame.display.flip()
@@ -595,7 +603,8 @@ def manageMainMenu(menu, world, player, ennemies):
                 player["playerDir"] = 0
                 player["attacking"] = False
                 world["worldPos"] = pygame.Vector2(-200, -250)
-                changeMap(world, player, ennemies, 0, worldPos=pygame.Vector2(-200, -250))
+                changeMap(world, player, ennemies, 0, worldPos=pygame.Vector2(-200, -250), forceChange=True)
+                saveGame(world, player)
 
             if button[1] == "Reprendre" and timeDelay >= 15 and exists("save/save.json"):
                 isInMainMenu = False
@@ -678,6 +687,8 @@ def loadGame():
             playerInfos["ennemiesHit"] = []
             del playerInfos["worldIndex"], playerInfos["worldPos"], playerInfos["chests"]
             file.close()
+            changeMap(worldInfos, playerInfos, ennemiesList, dict_prov["worldIndex"], playerInfos["playerPos"],
+                      worldInfos["worldPos"], spawnEnnemies=True, forceMusic=True, forceChange=True)
             print("Loaded save file")
     except FileNotFoundError:
         print("Save file was not found")
@@ -691,6 +702,37 @@ def manageInteractables(world, player):
             interactable[1](interactable[4])
 
 
+def manageDeath(timer):
+    global isInMainMenu, timeDelay
+    if timer > 1:
+        timer = 0
+        black_fade = pygame.Surface((screen.get_width(), screen.get_height()))
+        black_fade.set_alpha(10)
+        screen.blit(black_fade, (0, 0))
+        pygame.mouse.set_visible(True)
+
+        # buttons
+        pygame.draw.rect(screen, "red", pygame.Rect(1366 / 2 - 150, 912 / 2 + 50, 300, 90))
+        pygame.draw.rect(screen, "red", pygame.Rect(1366 / 2 - 150, 912 / 2 - 100, 300, 90))
+        img = fontTitle.render("Vous êtes mort", True, "White")
+        screen.blit(img, (1366 / 2 - img.get_width() / 2, 200))
+        img = fontButton.render("Reprendre à la", True, "White")
+        screen.blit(img, (1366 / 2 - img.get_width() / 2, 912 / 2 - 95))
+        img = fontButton.render("dernière sauvegarde", True, "White")
+        screen.blit(img, (1366 / 2 - img.get_width() / 2, 912 / 2 - 55))
+        img = fontButton.render("Retour au menu", True, "White")
+        screen.blit(img, (1366 / 2 - img.get_width() / 2, 912 / 2 + 75))
+
+        if 1366 / 2 - 150 <= pygame.mouse.get_pos()[0] <= 1366 / 2 + 150 and pygame.mouse.get_pressed()[0]:
+            if 912 / 2 + 50 <= pygame.mouse.get_pos()[1] <= 912 / 2 + 140:
+                isInMainMenu = True
+                timeDelay = 0
+            if 912 / 2 - 100 <= pygame.mouse.get_pos()[1] <= 912 / 2 - 10:
+                loadGame()
+
+
+        pygame.display.update()
+
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -700,7 +742,7 @@ while running:
                 manageInteractables(worldInfos, playerInfos)
 
     if pygame.key.get_pressed()[pygame.K_ESCAPE] and not isInMainMenu:
-        if not isPauseKeyPressed:
+        if not isPauseKeyPressed and playerInfos["life"] > 0:
             isInPauseMenu = not isInPauseMenu
         isPauseKeyPressed = True
     else:
@@ -718,6 +760,8 @@ while running:
         manageMainMenu(MAIN_MENU, worldInfos, playerInfos, ennemiesList)
     elif isInPauseMenu:
         managePauseMenu(playerInfos, worldInfos, ennemiesList, PAUSE_MENU_BUTTONS)
+    elif playerInfos["life"] <= 0:
+        manageDeath(timer)
     else:
         manageCollisions(playerInfos, worldInfos, ennemiesList)
         manageMovement(playerInfos, worldInfos, ennemiesList)
@@ -729,5 +773,6 @@ while running:
             textToShow.remove(text)
     dt = clock.tick(60) / 1000
     timeDelay += 1
+    timer += dt
 
 pygame.quit()
