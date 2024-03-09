@@ -181,38 +181,74 @@ def openChest(id):
             playerInfos["objects"][worldInfos["chests"][worldInfos["worldIndex"]][id][0][0]] = \
                 worldInfos["chests"][worldInfos["worldIndex"]][id][0][1]
         worldInfos["chests"][worldInfos["worldIndex"]][id][1] = True
-        showMessageOnScreen(("Vous avez obtenu " + str(worldInfos["chests"][worldInfos["worldIndex"]][id][0][1]) + " "+ worldInfos["chests"][worldInfos["worldIndex"]][id][0][0],))
+        showMessageOnScreen(("Vous avez obtenu " + str(worldInfos["chests"][worldInfos["worldIndex"]][id][0][1]) + " " +
+                             worldInfos["chests"][worldInfos["worldIndex"]][id][0][0],))
 
 
 worldInfos = {"worldPos": pygame.Vector2(-200, -250),
               "worldIndex": 0,
               "music": ("resources/music/spawn_village_theme.mp3",
+                        "resources/music/field_theme.mp3",
+                        "resources/music/field_theme.mp3",
+                        "resources/music/field_theme.mp3",
                         "resources/music/field_theme.mp3"),
               "background": (
                   pygame.transform.scale(pygame.image.load("./resources/map/spawn.png").convert_alpha(), (1766, 1177)),
                   pygame.transform.scale(pygame.image.load("./resources/map/map1.png").convert_alpha(),
+                                         (1766, 1177)),
+                  pygame.transform.scale(pygame.image.load("./resources/map/beach.png").convert_alpha(),
+                                         (1766, 1177)),
+                  pygame.transform.scale(pygame.image.load("./resources/map/forest1.png").convert_alpha(),
+                                         (1766, 1177)),
+                  pygame.transform.scale(pygame.image.load("./resources/map/forest2.png").convert_alpha(),
                                          (1766, 1177))
               ),
               "colliding": (
                   pygame.transform.scale(pygame.image.load("./resources/map/spawn_coll.png").convert_alpha(),
                                          (1766, 1177)),
                   pygame.transform.scale(pygame.image.load("./resources/map/map1_coll.png").convert_alpha(),
+                                         (1766, 1177)),
+                  pygame.transform.scale(pygame.image.load("./resources/map/beach_coll.png").convert_alpha(),
+                                         (1766, 1177)),
+                  pygame.transform.scale(pygame.image.load("./resources/map/forest1_coll.png").convert_alpha(),
+                                         (1766, 1177)),
+                  pygame.transform.scale(pygame.image.load("./resources/map/forest2_coll.png").convert_alpha(),
                                          (1766, 1177))
               ),
               "foreground": (
                   pygame.transform.scale(pygame.image.load("./resources/map/spawn_fore.png").convert_alpha(),
                                          (1766, 1177)),
+                  pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(), (1766, 1177)),
+                  pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(), (1766, 1177)),
+                  pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(), (1766, 1177)),
                   pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(), (1766, 1177))
               ),
               "collisions": [],
-              "ennemiesForMap": ((), ()),
-              "changeMapTriggers": (((pygame.mask.Mask((175, 15), True), 1, 605, 0, 1366 / 2, 870, -230, -265),),
-                                    # tuple of tuples(map index) of tuples (mask, mapIndex, maskX, maskY, destPlayerX, destPlayerY, destMapX, destMapY)
-                                    ((pygame.mask.Mask((175, 15), True), 0, 605, 900, 1366 / 2, 0, -230, 0),)),
+              "ennemiesCleared": [False, False, False, False, False],
+              #(Type, Life, Pos, Rect size, Damage, ViewDistance, ReachDistance, TimeToAttack)
+              "ennemiesForMap": ((), #0
+                                 (), #1
+                                 (), #2
+                                 (), #3
+                                 ((0, 100, (200, 1000), (50, 50), 1, 300, 15, 1), (0, 100, (800, 950), (50, 50), 1, 300, 15, 1), (0, 100, (1200, 200), (50, 50), 1, 300, 15, 1)) #4
+                                 ),
+              # tuple of tuples(map index) of tuples (mask, mapIndex, maskX, maskY, destPlayerX, destPlayerY, destMapX, destMapY)
+              "changeMapTriggers": (((pygame.mask.Mask((175, 15), True), 1, 635, 10, 1366 / 2, 870, -230, -265),),  # 0
+                                    ((pygame.mask.Mask((175, 15), True), 0, 635, 900, 1366 / 2, 0, -230, 0),  # 1
+                                     (pygame.mask.Mask((15, 300), True), 2, 1351, 905 / 2 - 250 / 2, 0,
+                                      screen.get_height() / 2, 0, -150),
+                                     (pygame.mask.Mask((15, 300), True), 3, -15, 905 / 2 - 250 / 2, 1300,
+                                      screen.get_height() / 2, -400, -100)),
+                                    ((pygame.mask.Mask((15, 300), True), 1, -15, 905 / 2 - 250 / 2, 1300,
+                                      screen.get_height() / 2, -400, -150),),  # 2
+                                    ((pygame.mask.Mask((15, 300), True), 1, 1351, 905 / 2 - 250 / 2, 0,
+                                      screen.get_height() / 2, 0, -150),
+                                     (pygame.mask.Mask((300, 15), True), 4, 400, 900, 1366 / 2 - 100, 20, 0, 0)),  # 3
+                                    ((pygame.mask.Mask((300, 15), True), 3, 400, 0, 1366 / 2 - 100, 870, 0, -265),)),  # 4
               "interactables": (  # tuple of tuples(map index) of tuples (mask, action, maskX, maskY)
                   (), ((pygame.mask.Mask((75, 75), True), showMessageOnScreen, 1555, 475, ("test", "ligne2")),
                        (pygame.mask.Mask((75, 75), True), openChest, 875, 125, 0))),
-              "chests": [[], [[("épée", 1), False, (875, 95)]]]
+              "chests": [[], [[("épée", 1), False, (875, 95)]], [], [], []]
               }
 ennemiesList = []
 
@@ -269,9 +305,10 @@ def changeMap(world, player, ennemies, mapIndex,
         player["playerYToMove"] = True
     world["worldPos"] = worldPos
     player["playerPos"] = playerPos
-    if spawnEnnemies:
+    if spawnEnnemies and not world["ennemiesCleared"][mapIndex]:
         for ennemy in worldInfos["ennemiesForMap"][mapIndex]:
-            ennemies.append(ennemy)
+            print("called")
+            createEnnemy(ennemies, ennemy[0], ennemy[1], pygame.Rect(ennemy[2], ennemy[3]), ennemy[4], ennemy[5], ennemy[6], ennemy[7])
 
 
 def createEnnemy(ennemies, type, life, rect, damage=10, viewDistance=100, reachDistance=15, timeToAttack=3):
@@ -297,8 +334,9 @@ def manageEnnemies(ennemies, player, world):
     for ennemy in ennemies:
         if player["playerPos"].distance_to(pygame.Vector2(ennemy["rect"].x + ennemy["rect"].width // 2,
                                                           ennemy["rect"].y + ennemy["rect"].height // 2)) <= ennemy[
-            "viewDistance"]:
+            "viewDistance"] and not ennemy["playerDetected"]:
             ennemy["playerDetected"] = True
+            ennemy["animIndex"] = 0
         if ennemy["playerDetected"]:
             if world["collisions"][world["worldIndex"]].get_at((-world["worldPos"].x + ennemy["rect"].x + ennemy[
                 "rect"].width + 10, -world["worldPos"].y + ennemy["rect"].y + ennemy["rect"].height // 2)) == 0:
@@ -341,7 +379,8 @@ def manageControls(keys, player):
         attack(player)
 
     if keys[pygame.K_EQUALS]:
-        createEnnemy(ennemiesList,0, 100, pygame.Rect(player["playerPos"].__copy__(), (50, 50)), 2,
+        print(player["playerPos"], worldInfos["worldPos"])
+        createEnnemy(ennemiesList, 0, 100, pygame.Rect(player["playerPos"].__copy__(), (50, 50)), 2,
                      timeToAttack=1)
 
     if keys[pygame.K_LSHIFT]:
@@ -444,6 +483,7 @@ def manageMovement(player, world, ennemies):
 
 def manageDisplay(player, world, ennemies, needFlip):
     global PLAYER_CONSTS
+    debug = True
     screen.fill("black")
 
     screen.blit(world["background"][world["worldIndex"]], world["worldPos"])
@@ -476,16 +516,20 @@ def manageDisplay(player, world, ennemies, needFlip):
                     if ennemy["animIndex"] > 5:
                         ennemy["animIndex"] = 0
                         ennemy["attacking"] = False
-                elif abs(ennemy["rect"].x - player["playerPos"].x) > 30 or abs(ennemy["rect"].y - player["playerPos"].y) > 30:
+                elif abs(ennemy["rect"].x - player["playerPos"].x) > 30 or abs(
+                        ennemy["rect"].y - player["playerPos"].y) > 30:
                     index = 4 + ennemy["animIndex"]
                     if ennemy["animIndex"] > 3:
                         ennemy["animIndex"] = 0
                 elif ennemy["animIndex"] > 3:
-                        ennemy["animIndex"] = 0
+                    ennemy["animIndex"] = 0
                 if ennemy["rect"].x <= player["playerPos"].x - 20:
-                    screen.blit(pygame.transform.flip(SNAKE_TEXTURES[index], True, False), (ennemy["rect"].x - 32, ennemy["rect"].y - 32))
+                    screen.blit(pygame.transform.flip(SNAKE_TEXTURES[index], True, False),
+                                (ennemy["rect"].x - 32, ennemy["rect"].y - 32))
                 else:
                     screen.blit(SNAKE_TEXTURES[index], (ennemy["rect"].x - 32, ennemy["rect"].y - 32))
+            else:
+                screen.blit(SNAKE_TEXTURES[0], (ennemy["rect"].x - 32, ennemy["rect"].y - 32))
         if ennemy["animTimer"] > 8:
             ennemy["animIndex"] += 1
             ennemy["animTimer"] = 0
@@ -515,6 +559,11 @@ def manageDisplay(player, world, ennemies, needFlip):
         for i in range(len(textToShow)):
             img = fontButton.render(textToShow[i][0], True, "black")
             screen.blit(img, (35, (3 / 4) * screen.get_height() + 25 + i * 50))
+
+    if debug:
+        for maptrig in world["changeMapTriggers"][world["worldIndex"]]:
+            pygame.draw.rect(screen, "red", maptrig[0].get_rect(
+                topleft=(maptrig[2] * 1.3 + world["worldPos"].x, maptrig[3] * 1.3 + world["worldPos"].y)))
 
     if needFlip:
         pygame.display.flip()
@@ -559,13 +608,15 @@ def manageCollisions(player, world, ennemies):
                 ennemy["rect"].x += 50
             if ennemy["life"] <= 0:
                 ennemies.remove(ennemy)
+                if len(ennemies) == 0:
+                    world["ennemiesCleared"][world["worldIndex"]] = True
 
     for mapTrigger in world["changeMapTriggers"][world["worldIndex"]]:
         if mapTrigger[0].overlap(PLAYER_CONSTS["playerCollision"][0],
-                                 (player["playerPos"].x - 7 - mapTrigger[2],
-                                  player["playerPos"].y - mapTrigger[3] + 20)):
+                                 (player["playerPos"].x - mapTrigger[2],
+                                  player["playerPos"].y - mapTrigger[3])):
             changeMap(world, player, ennemies, mapTrigger[1], pygame.Vector2(mapTrigger[4], mapTrigger[5]),
-                      pygame.Vector2(mapTrigger[6], mapTrigger[7]))
+                     pygame.Vector2(mapTrigger[6], mapTrigger[7]))
 
 
 def manageMainMenu(menu, world, player, ennemies):
@@ -664,6 +715,7 @@ def saveGame(world, player):
             dict_prov["worldIndex"] = world["worldIndex"]
             dict_prov["worldPos"] = (world["worldPos"].x, world["worldPos"].y)
             dict_prov["chests"] = worldInfos["chests"]
+            dict_prov["ennemiesCleared"] = worldInfos["ennemiesCleared"]
             del dict_prov["ennemiesHit"]
             json.dump(dict_prov, file)
             file.close()
@@ -680,12 +732,13 @@ def loadGame():
             worldInfos["worldPos"] = pygame.Vector2(dict_prov["worldPos"][0], dict_prov["worldPos"][1])
             worldInfos["worldIndex"] = dict_prov["worldIndex"]
             worldInfos["chests"] = dict_prov["chests"]
+            worldInfos["ennemiesCleared"] = dict_prov["ennemiesCleared"]
             playerInfos = dict_prov.copy()
             playerInfos["playerPos"] = pygame.Vector2(dict_prov["playerPos"][0], dict_prov["playerPos"][1])
             playerInfos["playerSpeed"] = pygame.Vector2(0, 0)
             playerInfos["life"] = dict_prov["life"]
             playerInfos["ennemiesHit"] = []
-            del playerInfos["worldIndex"], playerInfos["worldPos"], playerInfos["chests"]
+            del playerInfos["worldIndex"], playerInfos["worldPos"], playerInfos["chests"], playerInfos["ennemiesCleared"]
             file.close()
             changeMap(worldInfos, playerInfos, ennemiesList, dict_prov["worldIndex"], playerInfos["playerPos"],
                       worldInfos["worldPos"], spawnEnnemies=True, forceMusic=True, forceChange=True)
@@ -730,8 +783,8 @@ def manageDeath(timer):
             if 912 / 2 - 100 <= pygame.mouse.get_pos()[1] <= 912 / 2 - 10:
                 loadGame()
 
-
         pygame.display.update()
+
 
 while running:
     for event in pygame.event.get():
