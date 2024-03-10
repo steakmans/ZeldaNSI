@@ -167,6 +167,7 @@ playerInfos = {
 # World related objects
 def showMessageOnScreen(texts):
     global textToShow
+    textToShow.clear()
     for txt in texts:
         textToShow.append((txt, time.time() + 5))
 
@@ -185,71 +186,82 @@ def openChest(id):
                              worldInfos["chests"][worldInfos["worldIndex"]][id][0][0],))
 
 
-worldInfos = {"worldPos": pygame.Vector2(-200, -250),
-              "worldIndex": 0,
-              "music": ("resources/music/spawn_village_theme.mp3",
-                        "resources/music/field_theme.mp3",
-                        "resources/music/field_theme.mp3",
-                        "resources/music/field_theme.mp3",
-                        "resources/music/field_theme.mp3"),
-              "background": (
-                  pygame.transform.scale(pygame.image.load("./resources/map/spawn.png").convert_alpha(), (1766, 1177)),
-                  pygame.transform.scale(pygame.image.load("./resources/map/map1.png").convert_alpha(),
-                                         (1766, 1177)),
-                  pygame.transform.scale(pygame.image.load("./resources/map/beach.png").convert_alpha(),
-                                         (1766, 1177)),
-                  pygame.transform.scale(pygame.image.load("./resources/map/forest1.png").convert_alpha(),
-                                         (1766, 1177)),
-                  pygame.transform.scale(pygame.image.load("./resources/map/forest2.png").convert_alpha(),
-                                         (1766, 1177))
-              ),
-              "colliding": (
-                  pygame.transform.scale(pygame.image.load("./resources/map/spawn_coll.png").convert_alpha(),
-                                         (1766, 1177)),
-                  pygame.transform.scale(pygame.image.load("./resources/map/map1_coll.png").convert_alpha(),
-                                         (1766, 1177)),
-                  pygame.transform.scale(pygame.image.load("./resources/map/beach_coll.png").convert_alpha(),
-                                         (1766, 1177)),
-                  pygame.transform.scale(pygame.image.load("./resources/map/forest1_coll.png").convert_alpha(),
-                                         (1766, 1177)),
-                  pygame.transform.scale(pygame.image.load("./resources/map/forest2_coll.png").convert_alpha(),
-                                         (1766, 1177))
-              ),
-              "foreground": (
-                  pygame.transform.scale(pygame.image.load("./resources/map/spawn_fore.png").convert_alpha(),
-                                         (1766, 1177)),
-                  pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(), (1766, 1177)),
-                  pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(), (1766, 1177)),
-                  pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(), (1766, 1177)),
-                  pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(), (1766, 1177))
-              ),
-              "collisions": [],
-              "ennemiesCleared": [False, False, False, False, False],
-              #(Type, Life, Pos, Rect size, Damage, ViewDistance, ReachDistance, TimeToAttack)
-              "ennemiesForMap": ((), #0
-                                 (), #1
-                                 (), #2
-                                 (), #3
-                                 ((0, 100, (200, 1000), (50, 50), 1, 300, 15, 1), (0, 100, (800, 950), (50, 50), 1, 300, 15, 1), (0, 100, (1200, 200), (50, 50), 1, 300, 15, 1)) #4
-                                 ),
-              # tuple of tuples(map index) of tuples (mask, mapIndex, maskX, maskY, destPlayerX, destPlayerY, destMapX, destMapY)
-              "changeMapTriggers": (((pygame.mask.Mask((175, 15), True), 1, 635, 10, 1366 / 2, 870, -230, -265),),  # 0
-                                    ((pygame.mask.Mask((175, 15), True), 0, 635, 900, 1366 / 2, 0, -230, 0),  # 1
-                                     (pygame.mask.Mask((15, 300), True), 2, 1351, 905 / 2 - 250 / 2, 0,
-                                      screen.get_height() / 2, 0, -150),
-                                     (pygame.mask.Mask((15, 300), True), 3, -15, 905 / 2 - 250 / 2, 1300,
-                                      screen.get_height() / 2, -400, -100)),
-                                    ((pygame.mask.Mask((15, 300), True), 1, -15, 905 / 2 - 250 / 2, 1300,
-                                      screen.get_height() / 2, -400, -150),),  # 2
-                                    ((pygame.mask.Mask((15, 300), True), 1, 1351, 905 / 2 - 250 / 2, 0,
-                                      screen.get_height() / 2, 0, -150),
-                                     (pygame.mask.Mask((300, 15), True), 4, 400, 900, 1366 / 2 - 100, 20, 0, 0)),  # 3
-                                    ((pygame.mask.Mask((300, 15), True), 3, 400, 0, 1366 / 2 - 100, 870, 0, -265),)),  # 4
-              "interactables": (  # tuple of tuples(map index) of tuples (mask, action, maskX, maskY)
-                  (), ((pygame.mask.Mask((75, 75), True), showMessageOnScreen, 1555, 475, ("test", "ligne2")),
-                       (pygame.mask.Mask((75, 75), True), openChest, 875, 125, 0))),
-              "chests": [[], [[("épée", 1), False, (875, 95)]], [], [], []]
-              }
+worldInfos_base = {"worldPos": pygame.Vector2(-200, -250),
+                   "worldIndex": 0,
+                   "music": ("resources/music/spawn_village_theme.mp3",
+                             "resources/music/field_theme.mp3",
+                             "resources/music/field_theme.mp3",
+                             "resources/music/field_theme.mp3",
+                             "resources/music/field_theme.mp3"),
+                   "background": (
+                       pygame.transform.scale(pygame.image.load("./resources/map/spawn.png").convert_alpha(),
+                                              (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("./resources/map/map1.png").convert_alpha(),
+                                              (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("./resources/map/beach.png").convert_alpha(),
+                                              (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("./resources/map/forest1.png").convert_alpha(),
+                                              (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("./resources/map/forest2.png").convert_alpha(),
+                                              (1766, 1177))
+                   ),
+                   "colliding": (
+                       pygame.transform.scale(pygame.image.load("./resources/map/spawn_coll.png").convert_alpha(),
+                                              (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("./resources/map/map1_coll.png").convert_alpha(),
+                                              (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("./resources/map/beach_coll.png").convert_alpha(),
+                                              (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("./resources/map/forest1_coll.png").convert_alpha(),
+                                              (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("./resources/map/forest2_coll.png").convert_alpha(),
+                                              (1766, 1177))
+                   ),
+                   "foreground": (
+                       pygame.transform.scale(pygame.image.load("./resources/map/spawn_fore.png").convert_alpha(),
+                                              (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(),
+                                              (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(),
+                                              (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(),
+                                              (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(),
+                                              (1766, 1177))
+                   ),
+                   "collisions": [],
+                   "ennemiesCleared": [False, False, False, False, False],
+                   # (Type, Life, Pos, Rect size, Damage, ViewDistance, ReachDistance, TimeToAttack)
+                   "ennemiesForMap": ((),  # 0
+                                      (),  # 1
+                                      (),  # 2
+                                      (),  # 3
+                                      ((0, 100, (200, 1000), (50, 50), 1, 300, 15, 1),
+                                       (0, 100, (800, 950), (50, 50), 1, 300, 15, 1),
+                                       (0, 100, (1200, 200), (50, 50), 1, 300, 15, 1))  # 4
+                                      ),
+                   # tuple of tuples(map index) of tuples (mask, mapIndex, maskX, maskY, destPlayerX, destPlayerY, destMapX, destMapY)
+                   "changeMapTriggers": (
+                   ((pygame.mask.Mask((175, 15), True), 1, 635, 10, 1366 / 2, 870, -230, -265),),  # 0
+                   ((pygame.mask.Mask((175, 15), True), 0, 635, 900, 1366 / 2, 0, -230, 0),  # 1
+                    (pygame.mask.Mask((15, 300), True), 2, 1351, 905 / 2 - 250 / 2, 0,
+                     screen.get_height() / 2, 0, -150),
+                    (pygame.mask.Mask((15, 300), True), 3, -15, 905 / 2 - 250 / 2, 1300,
+                     screen.get_height() / 2, -400, -100)),
+                   ((pygame.mask.Mask((15, 300), True), 1, -15, 905 / 2 - 250 / 2, 1300,
+                     screen.get_height() / 2, -400, -150),),  # 2
+                   ((pygame.mask.Mask((15, 300), True), 1, 1351, 905 / 2 - 250 / 2, 0,
+                     screen.get_height() / 2, 0, -150),
+                    (pygame.mask.Mask((300, 15), True), 4, 400, 900, 1366 / 2 - 100, 20, 0, 0)),  # 3
+                   ((pygame.mask.Mask((300, 15), True), 3, 400, 0, 1366 / 2 - 100, 870, 0, -265),)),
+                   # 4
+                   "interactables": (  # tuple of tuples(map index) of tuples (mask, action, maskX, maskY)
+                       (), ((pygame.mask.Mask((75, 75), True), showMessageOnScreen, 1555, 475, ("test", "ligne2")),
+                            (pygame.mask.Mask((75, 75), True), openChest, 875, 125, 0))),
+                   "chests": [[], [[("épée", 1), False, (875, 95)]], [], [], []]
+                   }
+
+worldInfos = worldInfos_base.copy()
 ennemiesList = []
 
 for item in worldInfos["colliding"]:
@@ -308,7 +320,8 @@ def changeMap(world, player, ennemies, mapIndex,
     if spawnEnnemies and not world["ennemiesCleared"][mapIndex]:
         for ennemy in worldInfos["ennemiesForMap"][mapIndex]:
             print("called")
-            createEnnemy(ennemies, ennemy[0], ennemy[1], pygame.Rect(ennemy[2], ennemy[3]), ennemy[4], ennemy[5], ennemy[6], ennemy[7])
+            createEnnemy(ennemies, ennemy[0], ennemy[1], pygame.Rect(ennemy[2], ennemy[3]), ennemy[4], ennemy[5],
+                         ennemy[6], ennemy[7])
 
 
 def createEnnemy(ennemies, type, life, rect, damage=10, viewDistance=100, reachDistance=15, timeToAttack=3):
@@ -616,7 +629,7 @@ def manageCollisions(player, world, ennemies):
                                  (player["playerPos"].x - mapTrigger[2],
                                   player["playerPos"].y - mapTrigger[3])):
             changeMap(world, player, ennemies, mapTrigger[1], pygame.Vector2(mapTrigger[4], mapTrigger[5]),
-                     pygame.Vector2(mapTrigger[6], mapTrigger[7]))
+                      pygame.Vector2(mapTrigger[6], mapTrigger[7]))
 
 
 def manageMainMenu(menu, world, player, ennemies):
@@ -645,17 +658,36 @@ def manageMainMenu(menu, world, player, ennemies):
                 pygame.mouse.get_pos()[1] <= button[0].bottomright[1] and pygame.mouse.get_pressed()[0]:
 
             if button[1] == "Nouvelle partie" and timeDelay >= 15:
+                global playerInfos, worldInfos, worldInfos_base
                 isInMainMenu = False
                 isInPauseMenu = False
                 pygame.mixer.music.stop()
                 pygame.mixer.music.load(world["music"][0])
                 pygame.mixer.music.play(-1, 0, 0)
-                player["playerPos"] = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
-                player["playerDir"] = 0
-                player["attacking"] = False
-                world["worldPos"] = pygame.Vector2(-200, -250)
-                changeMap(world, player, ennemies, 0, worldPos=pygame.Vector2(-200, -250), forceChange=True)
-                saveGame(world, player)
+                playerInfos = {
+                    "playerPos": pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2),
+                    "playerSpeed": pygame.Vector2(0, 0),
+                    "life": 12,
+                    "maxHealth": 12,
+                    "coins": 0,
+                    "objects": {},
+                    "damage": 50,
+                    "speed": 200,
+                    "playerXToMove": False,
+                    "playerYToMove": False,
+                    "playerDir": 0,  # 0 = down, 1 = up, 2 = left, 3 = right
+                    "playerAnimIndex": 0,
+                    "playerAnimTimer": 0,
+                    "attacking": False,
+                    "ennemiesHit": [],
+                    "attackTimer": 0,
+                }
+                worldInfos = worldInfos_base.copy()
+                playerInfos["playerPos"] = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
+                worldInfos["worldPos"] = pygame.Vector2(-200, -250)
+                worldInfos[""] = worldInfos_base["chests"].copy()
+                #changeMap(worldInfos, playerInfos, ennemies, 0, worldPos=pygame.Vector2(-200, -250), forceChange=True)
+                saveGame(worldInfos, playerInfos)
 
             if button[1] == "Reprendre" and timeDelay >= 15 and exists("save/save.json"):
                 isInMainMenu = False
@@ -738,7 +770,8 @@ def loadGame():
             playerInfos["playerSpeed"] = pygame.Vector2(0, 0)
             playerInfos["life"] = dict_prov["life"]
             playerInfos["ennemiesHit"] = []
-            del playerInfos["worldIndex"], playerInfos["worldPos"], playerInfos["chests"], playerInfos["ennemiesCleared"]
+            del playerInfos["worldIndex"], playerInfos["worldPos"], playerInfos["chests"], playerInfos[
+                "ennemiesCleared"]
             file.close()
             changeMap(worldInfos, playerInfos, ennemiesList, dict_prov["worldIndex"], playerInfos["playerPos"],
                       worldInfos["worldPos"], spawnEnnemies=True, forceMusic=True, forceChange=True)
