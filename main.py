@@ -9,7 +9,7 @@ pygame.init()
 pygame_icon = pygame.image.load('./resources/gui/icon.png')
 pygame.display.set_icon(pygame_icon)
 pygame.display.set_caption("ZeldaNSI")
-screen = pygame.display.set_mode((1366, 912))  # , flags=pygame.FULLSCREEN | pygame.NOFRAME)
+screen = pygame.display.set_mode((1366, 912), flags=pygame.FULLSCREEN | pygame.NOFRAME)
 running = True
 clock = pygame.time.Clock()
 dt = 0
@@ -24,6 +24,7 @@ fontButton = pygame.font.SysFont("arial", 30)
 mouseMask = pygame.mask.Mask((1, 1), True)
 pygame.mixer.music.set_volume(0.1)
 textToShow = []
+interact_mask = pygame.mask.Mask((75, 75), True)
 
 # Constants
 ICONS = {
@@ -149,7 +150,6 @@ playerInfos = {
     "playerSpeed": pygame.Vector2(0, 0),
     "life": 12,
     "maxHealth": 12,
-    "coins": 0,
     "objects": {},
     "damage": 50,
     "speed": 200,
@@ -240,31 +240,44 @@ worldInfos_base = {"worldPos": pygame.Vector2(-200, -250),
                                        (0, 100, (800, 950), (50, 50), 1, 300, 15, 1),
                                        (0, 100, (1200, 200), (50, 50), 1, 300, 15, 1))  # 4
                                       ),
-                   # tuple of tuples(map index) of tuples (mask, mapIndex, maskX, maskY, destPlayerX, destPlayerY, destMapX, destMapY)
+                   # tuple of tuples(map index) of tuples (mask, mapIndex, maskX, maskY, destPlayerX, destPlayerY,
+                   # destMapX, destMapY)
                    "changeMapTriggers": (
-                   ((pygame.mask.Mask((175, 15), True), 1, 635, 10, 1366 / 2, 870, -230, -265),),  # 0
-                   ((pygame.mask.Mask((175, 15), True), 0, 635, 900, 1366 / 2, 0, -230, 0),  # 1
-                    (pygame.mask.Mask((15, 300), True), 2, 1351, 905 / 2 - 250 / 2, 0,
-                     screen.get_height() / 2, 0, -150),
-                    (pygame.mask.Mask((15, 300), True), 3, -15, 905 / 2 - 250 / 2, 1300,
-                     screen.get_height() / 2, -400, -100)),
-                   ((pygame.mask.Mask((15, 300), True), 1, -15, 905 / 2 - 250 / 2, 1300,
-                     screen.get_height() / 2, -400, -150),),  # 2
-                   ((pygame.mask.Mask((15, 300), True), 1, 1351, 905 / 2 - 250 / 2, 0,
-                     screen.get_height() / 2, 0, -150),
-                    (pygame.mask.Mask((300, 15), True), 4, 400, 900, 1366 / 2 - 100, 20, 0, 0)),  # 3
-                   ((pygame.mask.Mask((300, 15), True), 3, 400, 0, 1366 / 2 - 100, 870, 0, -265),)),
+                       ((pygame.mask.Mask((175, 15), True), 1, 635, 10, 1366 / 2, 870, -230, -265),),  # 0
+                       ((pygame.mask.Mask((175, 15), True), 0, 635, 900, 1366 / 2, 0, -230, 0),  # 1
+                        (pygame.mask.Mask((15, 300), True), 2, 1351, 905 / 2 - 250 / 2, 0,
+                         screen.get_height() / 2, 0, -150),
+                        (pygame.mask.Mask((15, 300), True), 3, -15, 905 / 2 - 250 / 2, 1300,
+                         screen.get_height() / 2, -400, -100)),
+                       ((pygame.mask.Mask((15, 300), True), 1, -15, 905 / 2 - 250 / 2, 1300,
+                         screen.get_height() / 2, -400, -150),),  # 2
+                       ((pygame.mask.Mask((15, 300), True), 1, 1351, 905 / 2 - 250 / 2, 0,
+                         screen.get_height() / 2, 0, -150),
+                        (pygame.mask.Mask((300, 15), True), 4, 400, 900, 1366 / 2 - 100, 20, 0, 0)),  # 3
+                       ((pygame.mask.Mask((300, 15), True), 3, 400, 0, 1366 / 2 - 100, 870, 0, -265),)),
                    # 4
-                   "interactables": (  # tuple of tuples(map index) of tuples (mask, action, maskX, maskY)
-                       (), ((pygame.mask.Mask((75, 75), True), showMessageOnScreen, 1555, 475, ("test", "ligne2")),
-                            (pygame.mask.Mask((75, 75), True), openChest, 875, 125, 0))),
-                   "chests": [[], [[("épée", 1), False, (875, 95)]], [], [], []]
+                   "interactables": (  # tuple of tuples(map index) of tuples (mask, action, maskX, maskY, params)
+                       (),
+                       ((interact_mask, showMessageOnScreen, 1555, 475, ("Grotte de la solitude: →", "Forêt et "
+                                                                                                     "Chateau: ←")),
+                        (interact_mask, openChest, 875, 125, 0)),
+                       (),
+                       ((interact_mask, showMessageOnScreen, 1230, 375, ("Chateau: ↑", "Village de la foret: ↓")),
+                        (interact_mask, showMessageOnScreen, 287, 375, ("Enclot du ROI", "Interdiction d'y entrer.")),
+                        (interact_mask, openChest, 77, 150, 0)),
+                       ()),
+                   "chests": [[],
+                              [[("épée", 1), False, (875, 95)]],
+                              [],
+                              [[("pièces", 50), False, (77, 120)]],
+                              []]
                    }
 
 worldInfos = worldInfos_base.copy()
 ennemiesList = []
 
 for item in worldInfos["colliding"]:
+    # noinspection PyTypeChecker
     worldInfos["collisions"].append(pygame.mask.from_surface(item))
 
 
@@ -343,26 +356,27 @@ def createEnnemy(ennemies, type, life, rect, damage=10, viewDistance=100, reachD
     ennemies.append(attributes)
 
 
+# TODO movement needs a rework
 def manageEnnemies(ennemies, player, world):
     for ennemy in ennemies:
         if player["playerPos"].distance_to(pygame.Vector2(ennemy["rect"].x + ennemy["rect"].width // 2,
                                                           ennemy["rect"].y + ennemy["rect"].height // 2)) <= ennemy[
-            "viewDistance"] and not ennemy["playerDetected"]:
+                                                          "viewDistance"] and not ennemy["playerDetected"]:
             ennemy["playerDetected"] = True
             ennemy["animIndex"] = 0
         if ennemy["playerDetected"]:
             if world["collisions"][world["worldIndex"]].get_at((-world["worldPos"].x + ennemy["rect"].x + ennemy[
-                "rect"].width + 10, -world["worldPos"].y + ennemy["rect"].y + ennemy["rect"].height // 2)) == 0:
+                    "rect"].width + 10, -world["worldPos"].y + ennemy["rect"].y + ennemy["rect"].height // 2)) == 0:
                 ennemy["rect"].x += 100 * dt
             if world["collisions"][world["worldIndex"]].get_at((-world["worldPos"].x + ennemy["rect"].x - 10,
                                                                 -world["worldPos"].y + ennemy["rect"].y + ennemy[
-                                                                    "rect"].height // 2)) == 0:
+                                                                "rect"].height // 2)) == 0:
                 ennemy["rect"].x -= 100 * dt
             if world["collisions"][world["worldIndex"]].get_at((-world["worldPos"].x + ennemy["rect"].x + ennemy[
-                "rect"].width // 2, -world["worldPos"].y + ennemy["rect"].y + ennemy["rect"].height + 10)) == 0:
+                    "rect"].width // 2, -world["worldPos"].y + ennemy["rect"].y + ennemy["rect"].height + 10)) == 0:
                 ennemy["rect"].y += 100 * dt
             if world["collisions"][world["worldIndex"]].get_at((-world["worldPos"].x + ennemy["rect"].x + ennemy[
-                "rect"].width // 2, -world["worldPos"].y + ennemy["rect"].y - 10)) == 0:
+                    "rect"].width // 2, -world["worldPos"].y + ennemy["rect"].y - 10)) == 0:
                 ennemy["rect"].y -= 100 * dt
             ennemy["rect"].y += 100 * clamp(player["playerPos"].y - ennemy["rect"].y - ennemy["rect"].height // 2, -1,
                                             1) * dt
@@ -370,7 +384,7 @@ def manageEnnemies(ennemies, player, world):
                                             1) * dt
         if player["playerPos"].distance_to(pygame.Vector2(ennemy["rect"].x + ennemy["rect"].width // 2,
                                                           ennemy["rect"].y + ennemy["rect"].height // 2)) <= ennemy[
-            "reachDistance"]:
+                                                          "reachDistance"]:
             ennemy["attackTimer"] += dt
             if ennemy["attackTimer"] >= ennemy["timeToAttack"] - 0.45 and ennemy["type"] == 0:
                 ennemy["attacking"] = True
@@ -577,6 +591,10 @@ def manageDisplay(player, world, ennemies, needFlip):
         for maptrig in world["changeMapTriggers"][world["worldIndex"]]:
             pygame.draw.rect(screen, "red", maptrig[0].get_rect(
                 topleft=(maptrig[2] * 1.3 + world["worldPos"].x, maptrig[3] * 1.3 + world["worldPos"].y)))
+        for interactTrigger in world["interactables"][world["worldIndex"]]:
+            pygame.draw.rect(screen, "green", interactTrigger[0].get_rect(
+                topleft=(interactTrigger[2] + world["worldPos"].x,
+                         interactTrigger[3] + world["worldPos"].y)))
 
     if needFlip:
         pygame.display.flip()
@@ -669,7 +687,6 @@ def manageMainMenu(menu, world, player, ennemies):
                     "playerSpeed": pygame.Vector2(0, 0),
                     "life": 12,
                     "maxHealth": 12,
-                    "coins": 0,
                     "objects": {},
                     "damage": 50,
                     "speed": 200,
@@ -682,11 +699,15 @@ def manageMainMenu(menu, world, player, ennemies):
                     "ennemiesHit": [],
                     "attackTimer": 0,
                 }
+                textToShow.clear()
                 worldInfos = worldInfos_base.copy()
                 playerInfos["playerPos"] = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
                 worldInfos["worldPos"] = pygame.Vector2(-200, -250)
-                worldInfos[""] = worldInfos_base["chests"].copy()
-                #changeMap(worldInfos, playerInfos, ennemies, 0, worldPos=pygame.Vector2(-200, -250), forceChange=True)
+                for chest in worldInfos["chests"]:
+                    for i in range(len(chest)):
+                        chest[i][1] = False
+
+                # changeMap(worldInfos, playerInfos, ennemies, 0, worldPos=pygame.Vector2(-200, -250), forceChange=True)
                 saveGame(worldInfos, playerInfos)
 
             if button[1] == "Reprendre" and timeDelay >= 15 and exists("save/save.json"):
