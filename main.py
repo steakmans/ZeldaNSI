@@ -75,6 +75,8 @@ SNAKE_TEXTURES = [
     pygame.transform.scale_by(pygame.image.load("resources/ennemies/snake/snake_death4.png").convert_alpha(), 3),
 ]
 
+MASK_SNAKE = pygame.mask.from_surface(SNAKE_TEXTURES[0])
+
 PLAYER_CONSTS = {
     "playerTextures": (
         pygame.transform.scale_by(pygame.image.load("resources/character/idle down.png").convert_alpha(), 2),
@@ -356,7 +358,6 @@ def createEnnemy(ennemies, type, life, rect, damage=10, viewDistance=100, reachD
     ennemies.append(attributes)
 
 
-# TODO movement needs a rework
 def manageEnnemies(ennemies, player, world):
     for ennemy in ennemies:
         if player["playerPos"].distance_to(pygame.Vector2(ennemy["rect"].x + ennemy["rect"].width // 2,
@@ -365,26 +366,22 @@ def manageEnnemies(ennemies, player, world):
             ennemy["playerDetected"] = True
             ennemy["animIndex"] = 0
         if ennemy["playerDetected"]:
-            if world["collisions"][world["worldIndex"]].get_at((-world["worldPos"].x + ennemy["rect"].x + ennemy[
-                    "rect"].width + 10, -world["worldPos"].y + ennemy["rect"].y + ennemy["rect"].height // 2)) == 0:
-                ennemy["rect"].x += 100 * dt
-            if world["collisions"][world["worldIndex"]].get_at((-world["worldPos"].x + ennemy["rect"].x - 10,
-                                                                -world["worldPos"].y + ennemy["rect"].y + ennemy[
-                                                                "rect"].height // 2)) == 0:
-                ennemy["rect"].x -= 100 * dt
-            if world["collisions"][world["worldIndex"]].get_at((-world["worldPos"].x + ennemy["rect"].x + ennemy[
-                    "rect"].width // 2, -world["worldPos"].y + ennemy["rect"].y + ennemy["rect"].height + 10)) == 0:
-                ennemy["rect"].y += 100 * dt
-            if world["collisions"][world["worldIndex"]].get_at((-world["worldPos"].x + ennemy["rect"].x + ennemy[
-                    "rect"].width // 2, -world["worldPos"].y + ennemy["rect"].y - 10)) == 0:
-                ennemy["rect"].y -= 100 * dt
-            ennemy["rect"].y += 100 * clamp(player["playerPos"].y - ennemy["rect"].y - ennemy["rect"].height // 2, -1,
-                                            1) * dt
-            ennemy["rect"].x += 100 * clamp(player["playerPos"].x - ennemy["rect"].x - ennemy["rect"].width // 2, -1,
-                                            1) * dt
+            y_value = 100 * clamp(player["playerPos"].y - ennemy["rect"].y - ennemy["rect"].height // 2, -1,
+                                  1) * dt
+            ennemy["rect"].y += y_value
+            if MASK_SNAKE.overlap(world["collisions"][world["worldIndex"]], (
+                    world["worldPos"].x - ennemy["rect"].x + 32, world["worldPos"].y - ennemy["rect"].y + 32)):
+                ennemy["rect"].y -= y_value
+            x_value = 100 * clamp(player["playerPos"].x - ennemy["rect"].x - ennemy["rect"].width // 2, -1,
+                                  1) * dt
+            ennemy["rect"].x += x_value
+            if MASK_SNAKE.overlap(world["collisions"][world["worldIndex"]], (
+                    world["worldPos"].x - ennemy["rect"].x + 32, world["worldPos"].y - ennemy["rect"].y + 32)):
+                ennemy["rect"].x -= x_value
+
         if player["playerPos"].distance_to(pygame.Vector2(ennemy["rect"].x + ennemy["rect"].width // 2,
                                                           ennemy["rect"].y + ennemy["rect"].height // 2)) <= ennemy[
-                                                          "reachDistance"]:
+            "reachDistance"]:
             ennemy["attackTimer"] += dt
             if ennemy["attackTimer"] >= ennemy["timeToAttack"] - 0.45 and ennemy["type"] == 0:
                 ennemy["attacking"] = True
@@ -812,7 +809,6 @@ def manageInteractables(world, player):
 def manageDeath(timer):
     global isInMainMenu, timeDelay
     if timer > 1:
-        timer = 0
         black_fade = pygame.Surface((screen.get_width(), screen.get_height()))
         black_fade.set_alpha(10)
         screen.blit(black_fade, (0, 0))
