@@ -9,7 +9,7 @@ pygame.init()
 pygame_icon = pygame.image.load('./resources/gui/icon.png')
 pygame.display.set_icon(pygame_icon)
 pygame.display.set_caption("ZeldaNSI")
-screen = pygame.display.set_mode((1366, 912), flags=pygame.FULLSCREEN | pygame.NOFRAME)
+screen = pygame.display.set_mode((1366, 912)) #, flags=pygame.FULLSCREEN | pygame.NOFRAME)
 running = True
 clock = pygame.time.Clock()
 dt = 0
@@ -167,15 +167,13 @@ playerInfos = {
 
 
 # World related objects
-def showMessageOnScreen(texts):
-    global textToShow
+def showMessageOnScreen(texts, textToShow):
     textToShow.clear()
     for txt in texts:
         textToShow.append((txt, time.time() + 5))
 
 
-def openChest(id):
-    global worldInfos, playerInfos
+def openChest(id, worldInfos, playerInfos, textToShow):
     if not worldInfos["chests"][worldInfos["worldIndex"]][id][1]:
         if worldInfos["chests"][worldInfos["worldIndex"]][id][0][0] in playerInfos["objects"]:
             playerInfos["objects"][worldInfos["chests"][worldInfos["worldIndex"]][id][0][0]] += \
@@ -185,7 +183,7 @@ def openChest(id):
                 worldInfos["chests"][worldInfos["worldIndex"]][id][0][1]
         worldInfos["chests"][worldInfos["worldIndex"]][id][1] = True
         showMessageOnScreen(("Vous avez obtenu " + str(worldInfos["chests"][worldInfos["worldIndex"]][id][0][1]) + " " +
-                             worldInfos["chests"][worldInfos["worldIndex"]][id][0][0],))
+                             worldInfos["chests"][worldInfos["worldIndex"]][id][0][0],), textToShow)
 
 
 worldInfos_base = {"worldPos": pygame.Vector2(-200, -250),
@@ -292,7 +290,7 @@ def clamp(value, minValue, maxValue):
     return value
 
 
-def attack(player):
+def attack(player, PLAYER_CONSTS):
     attack_pos = player["playerPos"].__copy__()
     if player["playerDir"] == 0:
         attack_pos.x -= 30
@@ -308,8 +306,7 @@ def attack(player):
     PLAYER_CONSTS["attackCollider"].x = attack_pos.x
     PLAYER_CONSTS["attackCollider"].y = attack_pos.y
 
-
-def changeMap(world, player, ennemies, mapIndex,
+def changeMap(screen, world, player, ennemies, mapIndex,
               playerPos=pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2),
               worldPos=pygame.Vector2(-200, -200), spawnEnnemies=True, forceMusic=False, forceChange=False):
     if world["worldIndex"] == mapIndex and not forceChange:
@@ -333,10 +330,11 @@ def changeMap(world, player, ennemies, mapIndex,
     world["worldPos"] = worldPos
     player["playerPos"] = playerPos
     if spawnEnnemies and not world["ennemiesCleared"][mapIndex]:
-        for ennemy in worldInfos["ennemiesForMap"][mapIndex]:
+        for ennemy in world["ennemiesForMap"][mapIndex]:
             print("called")
             createEnnemy(ennemies, ennemy[0], ennemy[1], pygame.Rect(ennemy[2], ennemy[3]), ennemy[4], ennemy[5],
                          ennemy[6], ennemy[7])
+
 
 
 def createEnnemy(ennemies, type, life, rect, damage=10, viewDistance=100, reachDistance=15, timeToAttack=3):
@@ -358,7 +356,7 @@ def createEnnemy(ennemies, type, life, rect, damage=10, viewDistance=100, reachD
     ennemies.append(attributes)
 
 
-def manageEnnemies(ennemies, player, world):
+def manageEnnemies(ennemies, player, world, MASK_SNAKE, dt, DEATH_MUSIC):
     for ennemy in ennemies:
         if player["playerPos"].distance_to(pygame.Vector2(ennemy["rect"].x + ennemy["rect"].width // 2,
                                                           ennemy["rect"].y + ennemy["rect"].height // 2)) <= ennemy[
@@ -396,14 +394,14 @@ def manageEnnemies(ennemies, player, world):
             ennemy["attackTimer"] = 0
 
 
-def manageControls(keys, player):
+def manageControls(keys, player, world, ennemiesList, PLAYER_CONSTS):
     if keys[pygame.K_SPACE] and not player["attacking"] and "épée" in player["objects"]:
         player["attacking"] = True
         player["playerAnimIndex"] = 16 + player["playerDir"]
-        attack(player)
+        attack(player, PLAYER_CONSTS)
 
     if keys[pygame.K_EQUALS]:
-        print(player["playerPos"], worldInfos["worldPos"])
+        print(player["playerPos"], world["worldPos"])
         createEnnemy(ennemiesList, 0, 100, pygame.Rect(player["playerPos"].__copy__(), (50, 50)), 2,
                      timeToAttack=1)
 
@@ -433,7 +431,7 @@ def manageControls(keys, player):
         player["playerSpeed"].clamp_magnitude(player["speed"])
 
 
-def manageAnimations(player):
+def manageAnimations(player, PLAYER_CONSTS):
     if not player["attacking"]:
         if player["playerAnimIndex"] % 4 == player["playerDir"]:
             if player["playerAnimTimer"] > 10:
@@ -447,7 +445,7 @@ def manageAnimations(player):
         if player["playerSpeed"].length() == 0:
             player["playerAnimIndex"] = player["playerDir"]
 
-        playerInfos["playerAnimTimer"] += player["speed"] / 200
+        player["playerAnimTimer"] += player["speed"] / 200
     else:
         player["playerSpeed"].x = 0
         player["playerSpeed"].y = 0
@@ -462,7 +460,7 @@ def manageAnimations(player):
             player["playerAnimIndex"] += 4
 
 
-def manageMovement(player, world, ennemies):
+def manageMovement(screen, player, world, ennemies, dt):
     if not player["playerXToMove"]:
         world["worldPos"].x += player["playerSpeed"].x * dt
         for ennemy in ennemies:
@@ -505,8 +503,7 @@ def manageMovement(player, world, ennemies):
         player["playerYToMove"] = False
 
 
-def manageDisplay(player, world, ennemies, needFlip):
-    global PLAYER_CONSTS
+def manageDisplay(screen, player, world, ennemies, needFlip, SNAKE_TEXTURES, ICONS, dt, PLAYER_CONSTS, textToShow, fontButton):
     debug = True
     screen.fill("black")
 
@@ -597,8 +594,7 @@ def manageDisplay(player, world, ennemies, needFlip):
         pygame.display.flip()
 
 
-def manageCollisions(player, world, ennemies):
-    global PLAYER_CONSTS
+def manageCollisions(screen, player, world, ennemies, PLAYER_CONSTS):
     # top
     if PLAYER_CONSTS["playerCollision"][0].overlap(world["collisions"][world["worldIndex"]], (
             world["worldPos"].x - player["playerPos"].x + 7, world["worldPos"].y - player["playerPos"].y - 10)):
@@ -643,12 +639,11 @@ def manageCollisions(player, world, ennemies):
         if mapTrigger[0].overlap(PLAYER_CONSTS["playerCollision"][0],
                                  (player["playerPos"].x - mapTrigger[2],
                                   player["playerPos"].y - mapTrigger[3])):
-            changeMap(world, player, ennemies, mapTrigger[1], pygame.Vector2(mapTrigger[4], mapTrigger[5]),
+            changeMap(screen, world, player, ennemies, mapTrigger[1], pygame.Vector2(mapTrigger[4], mapTrigger[5]),
                       pygame.Vector2(mapTrigger[6], mapTrigger[7]))
 
 
-def manageMainMenu(menu, world, player, ennemies):
-    global isInMainMenu, titleMusicPlaying, timeDelay, isInPauseMenu
+def manageMainMenu(screen, world, player, ennemies, isInMainMenu, titleMusicPlaying, timeDelay, isInPauseMenu, fontButton, fontTitle, MAIN_MENU, TITLE_MUSIC, worldInfos_base, textToShow, running):
     pygame.mouse.set_visible(True)
     screen.fill("black")
 
@@ -657,7 +652,7 @@ def manageMainMenu(menu, world, player, ennemies):
         pygame.mixer.music.play(-1, 0, 0)
         titleMusicPlaying = True
 
-    screen.blit(menu["background"], (0, 0))
+    screen.blit(MAIN_MENU["background"], (0, 0))
     for button in MAIN_MENU["buttons"]:
         if not button[1] == "Reprendre":
             pygame.draw.rect(screen, "red", button[0])
@@ -673,13 +668,12 @@ def manageMainMenu(menu, world, player, ennemies):
                 pygame.mouse.get_pos()[1] <= button[0].bottomright[1] and pygame.mouse.get_pressed()[0]:
 
             if button[1] == "Nouvelle partie" and timeDelay >= 15:
-                global playerInfos, worldInfos, worldInfos_base
                 isInMainMenu = False
                 isInPauseMenu = False
                 pygame.mixer.music.stop()
                 pygame.mixer.music.load(world["music"][0])
                 pygame.mixer.music.play(-1, 0, 0)
-                playerInfos = {
+                player = {
                     "playerPos": pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2),
                     "playerSpeed": pygame.Vector2(0, 0),
                     "life": 12,
@@ -697,37 +691,38 @@ def manageMainMenu(menu, world, player, ennemies):
                     "attackTimer": 0,
                 }
                 textToShow.clear()
-                worldInfos = worldInfos_base.copy()
-                playerInfos["playerPos"] = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
-                worldInfos["worldPos"] = pygame.Vector2(-200, -250)
-                for chest in worldInfos["chests"]:
+                world = worldInfos_base.copy()
+                player["playerPos"] = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
+                world["worldPos"] = pygame.Vector2(-200, -250)
+                for chest in world["chests"]:
                     for i in range(len(chest)):
                         chest[i][1] = False
 
-                # changeMap(worldInfos, playerInfos, ennemies, 0, worldPos=pygame.Vector2(-200, -250), forceChange=True)
-                saveGame(worldInfos, playerInfos)
+                saveGame(world, player)
 
             if button[1] == "Reprendre" and timeDelay >= 15 and exists("save/save.json"):
                 isInMainMenu = False
                 isInPauseMenu = False
                 pygame.mixer.music.stop()
-                loadGame()
+                player_prov = loadGame(screen, world, ennemies)
+                for keys in player:
+                    player[keys] = player_prov[keys]
                 pygame.mixer.music.load(world["music"][world["worldIndex"]])
                 pygame.mixer.music.play(-1, 0, 0)
-                changeMap(world, player, ennemies, world["worldIndex"], worldPos=pygame.Vector2(-200, -250))
+                changeMap(screen, world, player, ennemies, world["worldIndex"], worldPos=pygame.Vector2(-200, -250))
             if button[1] == "Quitter" and timeDelay >= 60:
-                global running
                 running = False
 
-    for text in menu["text"]:
+    for text in MAIN_MENU["text"]:
         img = fontTitle.render(text[0], True, "White") if text[2] else fontButton.render(text[0], True, "White")
         screen.blit(img, (text[1][0] - img.get_width() / 2, text[1][1]))
 
     pygame.display.flip()
+    return isInMainMenu, titleMusicPlaying, timeDelay, isInPauseMenu, running
 
 
-def managePauseMenu(player, world, ennemies, buttons):
-    manageDisplay(player, world, ennemies, False)
+def managePauseMenu(screen, player, world, ennemies, buttons, isInMainMenu, titleMusicPlaying, timeDelay, fontTitle, fontButton, SNAKE_TEXTURES, ICONS, dt, PLAYER_CONSTS, textToShow, isInPauseMenu):
+    manageDisplay(screen, player, world, ennemies, False, SNAKE_TEXTURES, ICONS, dt, PLAYER_CONSTS, textToShow, fontButton)
 
     s = pygame.Surface((screen.get_width(), screen.get_height()),
                        pygame.SRCALPHA)  # Creates a surface with transparent pixels
@@ -744,17 +739,17 @@ def managePauseMenu(player, world, ennemies, buttons):
         if button[0].topleft[0] <= pygame.mouse.get_pos()[0] <= button[0].bottomright[0] and button[0].topleft[1] <= \
                 pygame.mouse.get_pos()[1] <= button[0].bottomright[1] and pygame.mouse.get_pressed()[0]:
             if button[1] == "Retourner au menu":
-                global isInMainMenu, titleMusicPlaying, timeDelay
                 isInMainMenu = True
                 titleMusicPlaying = False
                 timeDelay = 0
                 saveGame(world, player)
+                return isInMainMenu, titleMusicPlaying, timeDelay, isInPauseMenu
             if button[1] == "Reprendre":
-                global isInPauseMenu
                 isInPauseMenu = False
+                return isInMainMenu, titleMusicPlaying, timeDelay, isInPauseMenu
 
     pygame.display.flip()
-
+    return isInMainMenu, titleMusicPlaying, timeDelay, isInPauseMenu
 
 def saveGame(world, player):
     try:
@@ -774,8 +769,7 @@ def saveGame(world, player):
         print("Save file was not found")
 
 
-def loadGame():
-    global playerInfos, worldInfos
+def loadGame(screen, worldInfos, ennemiesList):
     try:
         with open("save/save.json", "r") as file:
             dict_prov = json.loads(file.read())
@@ -783,31 +777,34 @@ def loadGame():
             worldInfos["worldIndex"] = dict_prov["worldIndex"]
             worldInfos["chests"] = dict_prov["chests"]
             worldInfos["ennemiesCleared"] = dict_prov["ennemiesCleared"]
-            playerInfos = dict_prov.copy()
-            playerInfos["playerPos"] = pygame.Vector2(dict_prov["playerPos"][0], dict_prov["playerPos"][1])
-            playerInfos["playerSpeed"] = pygame.Vector2(0, 0)
-            playerInfos["life"] = dict_prov["life"]
-            playerInfos["ennemiesHit"] = []
-            del playerInfos["worldIndex"], playerInfos["worldPos"], playerInfos["chests"], playerInfos[
+            player = dict_prov.copy()
+            player["playerPos"] = pygame.Vector2(dict_prov["playerPos"][0], dict_prov["playerPos"][1])
+            player["playerSpeed"] = pygame.Vector2(0, 0)
+            player["life"] = dict_prov["life"]
+            player["ennemiesHit"] = []
+            del player["worldIndex"], player["worldPos"], player["chests"], player[
                 "ennemiesCleared"]
             file.close()
-            changeMap(worldInfos, playerInfos, ennemiesList, dict_prov["worldIndex"], playerInfos["playerPos"],
+            changeMap(screen, worldInfos, player, ennemiesList, dict_prov["worldIndex"], player["playerPos"],
                       worldInfos["worldPos"], spawnEnnemies=True, forceMusic=True, forceChange=True)
             print("Loaded save file")
+            return player
     except FileNotFoundError:
         print("Save file was not found")
 
 
-def manageInteractables(world, player):
+def manageInteractables(world, player, PLAYER_CONSTS):
     for interactable in world["interactables"][world["worldIndex"]]:
         if interactable[0].overlap(PLAYER_CONSTS["playerCollision"][0],
                                    (player["playerPos"].x - 7 - interactable[2] - world["worldPos"][0],
                                     player["playerPos"].y - interactable[3] + 20 - world["worldPos"][1])):
-            interactable[1](interactable[4])
+            if interactable[1] is openChest:
+                interactable[1](interactable[4], world, player, textToShow)
+            else:
+                interactable[1](interactable[4], textToShow)
 
 
-def manageDeath(timer):
-    global isInMainMenu, timeDelay
+def manageDeath(screen, player, world, ennemies, timer, isInMainMenu, timeDelay, fontTitle, fontButton):
     if timer > 1:
         black_fade = pygame.Surface((screen.get_width(), screen.get_height()))
         black_fade.set_alpha(10)
@@ -830,10 +827,20 @@ def manageDeath(timer):
             if 912 / 2 + 50 <= pygame.mouse.get_pos()[1] <= 912 / 2 + 140:
                 isInMainMenu = True
                 timeDelay = 0
+                return isInMainMenu, timeDelay
             if 912 / 2 - 100 <= pygame.mouse.get_pos()[1] <= 912 / 2 - 10:
-                loadGame()
+                isInMainMenu = False
+                pygame.mixer.music.stop()
+                player_prov = loadGame(screen, world, ennemies)
+                for keys in player:
+                    player[keys] = player_prov[keys]
+                pygame.mixer.music.load(world["music"][world["worldIndex"]])
+                pygame.mixer.music.play(-1, 0, 0)
+                changeMap(screen, world, player, ennemies, world["worldIndex"], worldPos=pygame.Vector2(-200, -250))
+                return isInMainMenu, timeDelay
 
         pygame.display.update()
+        return isInMainMenu, timeDelay
 
 
 while running:
@@ -842,7 +849,7 @@ while running:
             running = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_e:
-                manageInteractables(worldInfos, playerInfos)
+                manageInteractables(worldInfos, playerInfos, PLAYER_CONSTS)
 
     if pygame.key.get_pressed()[pygame.K_ESCAPE] and not isInMainMenu:
         if not isPauseKeyPressed and playerInfos["life"] > 0:
@@ -852,24 +859,24 @@ while running:
         isPauseKeyPressed = False
 
     if not isInMainMenu and not isInPauseMenu:
-        manageControls(pygame.key.get_pressed(), playerInfos)
-        manageAnimations(playerInfos)
+        manageControls(pygame.key.get_pressed(), playerInfos, worldInfos, ennemiesList, PLAYER_CONSTS)
+        manageAnimations(playerInfos, PLAYER_CONSTS)
 
     pygame.mouse.set_visible(isInPauseMenu or isInMainMenu)
     if isInPauseMenu:
         dt = 0
 
     if isInMainMenu:
-        manageMainMenu(MAIN_MENU, worldInfos, playerInfos, ennemiesList)
+        isInMainMenu, titleMusicPlaying, timeDelay, isInPauseMenu, running = manageMainMenu(screen, worldInfos, playerInfos, ennemiesList, isInMainMenu, titleMusicPlaying, timeDelay, isInPauseMenu, fontButton, fontTitle, MAIN_MENU, TITLE_MUSIC, worldInfos_base, textToShow, running)
     elif isInPauseMenu:
-        managePauseMenu(playerInfos, worldInfos, ennemiesList, PAUSE_MENU_BUTTONS)
+        isInMainMenu, titleMusicPlaying, timeDelay, isInPauseMenu = managePauseMenu(screen, playerInfos, worldInfos, ennemiesList, PAUSE_MENU_BUTTONS, isInMainMenu, titleMusicPlaying, timeDelay, fontTitle, fontButton, SNAKE_TEXTURES, ICONS, dt, PLAYER_CONSTS, textToShow, isInPauseMenu)
     elif playerInfos["life"] <= 0:
-        manageDeath(timer)
+        isInMainMenu, timeDelay = manageDeath(screen, playerInfos, worldInfos, ennemiesList, timer, isInMainMenu, timeDelay, fontTitle, fontButton)
     else:
-        manageCollisions(playerInfos, worldInfos, ennemiesList)
-        manageMovement(playerInfos, worldInfos, ennemiesList)
-        manageEnnemies(ennemiesList, playerInfos, worldInfos)
-        manageDisplay(playerInfos, worldInfos, ennemiesList, True)
+        manageCollisions(screen, playerInfos, worldInfos, ennemiesList, PLAYER_CONSTS)
+        manageMovement(screen, playerInfos, worldInfos, ennemiesList, dt)
+        manageEnnemies(ennemiesList, playerInfos, worldInfos, MASK_SNAKE, dt, DEATH_MUSIC)
+        manageDisplay(screen, playerInfos, worldInfos, ennemiesList, True, SNAKE_TEXTURES, ICONS, dt, PLAYER_CONSTS, textToShow, fontButton)
 
     for text in textToShow.copy():
         if text[1] < time.time():
