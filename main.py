@@ -26,6 +26,10 @@ pygame.mixer.music.set_volume(0.1)
 textToShow = []
 interact_mask = pygame.mask.Mask((75, 75), True)
 
+back_x = 0
+back_y = 0
+movement = True
+
 # Constants
 ICONS = {
     "fullHearth": pygame.transform.scale_by(pygame.image.load("resources/gui/full_heart.png").convert_alpha(), 4),
@@ -57,6 +61,8 @@ DEATH_MUSIC = "resources/music/death.mp3"
 
 PAUSE_MENU_BUTTONS = ((pygame.Rect(screen.get_width() / 2 - 150, 400, 300, 90), "Reprendre"),
                       (pygame.Rect(screen.get_width() / 2 - 150, 550, 300, 90), "Retourner au menu"))
+
+BACKGROUND = pygame.transform.scale_by(pygame.image.load("resources/gui/world.png").convert_alpha(), 4)
 
 SNAKE_TEXTURES = [
     pygame.transform.scale_by(pygame.image.load("resources/ennemies/snake/snake_idle1.png").convert_alpha(), 3),
@@ -823,7 +829,7 @@ def manageCollisions(screen, player, world, ennemies, PLAYER_CONSTS):
 
 
 def manageMainMenu(screen, world, player, ennemies, isInMainMenu, titleMusicPlaying, timeDelay, isInPauseMenu,
-                   fontButton, fontTitle, MAIN_MENU, TITLE_MUSIC, worldInfos_base, textToShow, running):
+                   fontButton, fontTitle, MAIN_MENU, TITLE_MUSIC, worldInfos_base, textToShow, running, BACKGROUND, back_x, back_y, movement):
     pygame.mouse.set_visible(True)
     screen.fill("black")
 
@@ -832,7 +838,24 @@ def manageMainMenu(screen, world, player, ennemies, isInMainMenu, titleMusicPlay
         pygame.mixer.music.play(-1, 0, 0)
         titleMusicPlaying = True
 
-    screen.blit(MAIN_MENU["background"], (0, 0))
+    #TODO correct values to make a good background
+    if movement:
+        back_x += 2 * 2
+        back_y += 1 * 2
+        if back_y >= 0:
+            movement = False
+    else:
+        back_x -= 2 * 2
+        back_y -= 1 * 2
+        if back_y <= -1280 * 2:
+            movement = True
+
+    screen.blit(BACKGROUND, (back_x, back_y))
+    s = pygame.Surface((screen.get_width(), screen.get_height()),
+                       pygame.SRCALPHA)  # Creates a surface with transparent pixels
+    s.fill((0, 0, 0, 100))
+    screen.blit(s, (0, 0))
+
     for button in MAIN_MENU["buttons"]:
         if not button[1] == "Reprendre":
             pygame.draw.rect(screen, "red", button[0])
@@ -898,7 +921,7 @@ def manageMainMenu(screen, world, player, ennemies, isInMainMenu, titleMusicPlay
         screen.blit(img, (text[1][0] - img.get_width() / 2, text[1][1]))
 
     pygame.display.flip()
-    return isInMainMenu, titleMusicPlaying, timeDelay, isInPauseMenu, running
+    return isInMainMenu, titleMusicPlaying, timeDelay, isInPauseMenu, running, back_x, back_y, movement
 
 
 def managePauseMenu(screen, player, world, ennemies, buttons, isInMainMenu, titleMusicPlaying, timeDelay, fontTitle,
@@ -1050,7 +1073,7 @@ while running:
         dt = 0
 
     if isInMainMenu:
-        isInMainMenu, titleMusicPlaying, timeDelay, isInPauseMenu, running = manageMainMenu(screen, worldInfos,
+        isInMainMenu, titleMusicPlaying, timeDelay, isInPauseMenu, running, back_x, back_y, movement = manageMainMenu(screen, worldInfos,
                                                                                             playerInfos, ennemiesList,
                                                                                             isInMainMenu,
                                                                                             titleMusicPlaying,
@@ -1058,7 +1081,7 @@ while running:
                                                                                             fontButton, fontTitle,
                                                                                             MAIN_MENU, TITLE_MUSIC,
                                                                                             worldInfos_base, textToShow,
-                                                                                            running)
+                                                                                            running, BACKGROUND, back_x, back_y, movement)
     elif isInPauseMenu:
         isInMainMenu, titleMusicPlaying, timeDelay, isInPauseMenu = managePauseMenu(screen, playerInfos, worldInfos,
                                                                                     ennemiesList, PAUSE_MENU_BUTTONS,
