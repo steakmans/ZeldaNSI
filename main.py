@@ -3,7 +3,8 @@ import time
 import pygame
 import json
 from os.path import exists
-#[1222.2, 785.2] [-400, -265]
+
+# [1222.2, 785.2] [-400, -265]
 # Pygame values DO NOT MODIFY
 pygame.init()
 pygame_icon = pygame.image.load('./resources/gui/icon.png')
@@ -202,6 +203,11 @@ def openChest(id, worldInfos, playerInfos, textToShow):
             SOUND_EFFECTS["chest"].play()
 
 
+def interactChangeMap(screen, world, player, ennemies, args):
+    changeMap(screen, world, player, ennemies, args[0], pygame.Vector2(args[1], args[2]), pygame.Vector2(args[3],
+                                                                                                         args[4]))
+
+
 worldInfos_base = {"worldPos": pygame.Vector2(-200, -250),
                    "worldIndex": 0,
                    "music": ("resources/music/spawn_village_theme.mp3",
@@ -219,7 +225,8 @@ worldInfos_base = {"worldPos": pygame.Vector2(-200, -250),
                              "resources/music/forest_village.mp3",
                              "resources/music/forest_village.mp3",
                              "resources/music/forest_village.mp3",
-                             "resources/music/forest_village.mp3",),
+                             "resources/music/forest_village.mp3",
+                             "resources/music/cave_theme.mp3"),
                    "background": (
                        pygame.transform.scale(pygame.image.load("./resources/map/spawn.png").convert_alpha(),
                                               (1766, 1177)),
@@ -253,7 +260,8 @@ worldInfos_base = {"worldPos": pygame.Vector2(-200, -250),
                                               (1766, 1177)),
                        pygame.transform.scale(pygame.image.load("./resources/map/forest_village4.png").convert_alpha(),
                                               (1766, 1177)),
-
+                       pygame.transform.scale(pygame.image.load("./resources/map/cave1.png").convert_alpha(),
+                                              (1766, 1177))
                    ),
                    "colliding": (
                        pygame.transform.scale(pygame.image.load("./resources/map/spawn_coll.png").convert_alpha(),
@@ -291,7 +299,9 @@ worldInfos_base = {"worldPos": pygame.Vector2(-200, -250),
                            (1766, 1177)),
                        pygame.transform.scale(
                            pygame.image.load("./resources/map/forest_village4_coll.png").convert_alpha(),
-                           (1766, 1177))
+                           (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("./resources/map/cave1_coll.png").convert_alpha(),
+                                              (1766, 1177))
                    ),
                    "foreground": (
                        pygame.transform.scale(pygame.image.load("./resources/map/spawn_fore.png").convert_alpha(),
@@ -325,10 +335,12 @@ worldInfos_base = {"worldPos": pygame.Vector2(-200, -250),
                        pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(),
                                               (1766, 1177)),
                        pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(),
+                                              (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(),
                                               (1766, 1177))
                    ),
                    "collisions": [],
-                   "ennemiesCleared": [False] * 16,
+                   "ennemiesCleared": [False] * 17,
                    # (Type, Life, Pos, Rect size, Damage, ViewDistance, ReachDistance, TimeToAttack)
                    "ennemiesForMap": ((),  # 0
                                       (),  # 1
@@ -347,12 +359,13 @@ worldInfos_base = {"worldPos": pygame.Vector2(-200, -250),
                                       (),
                                       (),
                                       (),
+                                      (),
                                       ()
                                       ),
                    # tuple of tuples(map index) of tuples (mask, mapIndex, maskX, maskY, destPlayerX, destPlayerY,
                    # destMapX, destMapY)
                    "changeMapTriggers": (
-                       ((pygame.mask.Mask((175, 15), True), 1, 635, 10,-1, 870, -1, -265),),  # 0
+                       ((pygame.mask.Mask((175, 15), True), 1, 635, 10, -1, 870, -1, -265),),  # 0
                        ((pygame.mask.Mask((175, 15), True), 0, 635, 900, -1, 25, -1, 0),  # 1
                         (pygame.mask.Mask((15, 300), True), 2, 1351, 905 / 2 - 250 / 2, 0,
                          -1, 0, -1),
@@ -371,49 +384,51 @@ worldInfos_base = {"worldPos": pygame.Vector2(-200, -250),
                         (pygame.mask.Mask((15, 300), True), 6, 1351, 905 / 2 - 250 / 2, 20,
                          -1, 0, -1)),  # 5
                        ((pygame.mask.Mask((15, 300), True), 5, 10, 905 / 2 - 250 / 2, 1300,
-                         -1, -400, -1),), #6
+                         -1, -400, -1),),  # 6
                        ((pygame.mask.Mask((550, 15), True), 5, 700, 0, -1, 870, -1, -265),
                         (pygame.mask.Mask((900, 15), True), 4, 325, 900, 1222, 785, -400, -265),
                         (pygame.mask.Mask((15, 300), True), 8, 1351, 905 / 2 - 250 / 2, 15,
                          -1, 0, -1),
-                        (pygame.mask.Mask((15, 300), True), 4, 0,  905 / 2 - 250 / 2, 1222, 785, -400, -265)
-                        ), #7
+                        (pygame.mask.Mask((15, 300), True), 4, 0, 905 / 2 - 250 / 2, 1222, 785, -400, -265)
+                        ),  # 7
                        ((pygame.mask.Mask((15, 300), True), 7, 0, 905 / 2 - 250 / 2, 1300,
                          -1, -400, -1),
                         (pygame.mask.Mask((600, 15), True), 4, 450, 900, 1222, 785, -400, -265),
                         (pygame.mask.Mask((15, 300), True), 9, 1351, 905 / 2 - 250 / 2, 15,
                          -1, 0, -1)
-                        ), #8
+                        ),  # 8
                        ((pygame.mask.Mask((15, 300), True), 8, 0, 905 / 2 - 250 / 2, 1300,
                          -1, -400, -1),
                         (pygame.mask.Mask((300, 15), True), 4, 775, 900, 1222, 785, -400, -265),
                         (pygame.mask.Mask((15, 300), True), 4, 1351, 905 / 2 - 250 / 2, 1222, 785, -400, -265),
-                        (pygame.mask.Mask((300, 15), True), 10, 650, 0, -1, 900, -1, -265)), #9
+                        (pygame.mask.Mask((300, 15), True), 10, 650, 0, -1, 900, -1, -265)),  # 9
                        ((pygame.mask.Mask((300, 15), True), 9, 650, 900, -1, 15, -1, 0),
                         (pygame.mask.Mask((15, 300), True), 4, 0, 905 / 2 - 250 / 2, 1222, 785, -400, -265),
                         (pygame.mask.Mask((15, 300), True), 4, 1351, 905 / 2 - 250 / 2, 1222, 785, -400, -265),
-                        (pygame.mask.Mask((300, 15), True), 11, 650, 0, -1, 900, -1, -265)), #10
+                        (pygame.mask.Mask((300, 15), True), 11, 650, 0, -1, 900, -1, -265)),  # 10
                        ((pygame.mask.Mask((300, 15), True), 10, 650, 900, -1, 15, -1, 0),
-                        (pygame.mask.Mask((15, 300), True), 12, 1351, 905 / 2 - 250 / 2, 15, -1, 0, -1)), #11
+                        (pygame.mask.Mask((15, 300), True), 12, 1351, 905 / 2 - 250 / 2, 15, -1, 0, -1)),  # 11
                        ((pygame.mask.Mask((15, 300), True), 11, 0, 905 / 2 - 250 / 2, 1300, -1, -400, -1),
                         (pygame.mask.Mask((15, 900), True), 15, 1351, 0, 15, -1, 0, -1),
-                        (pygame.mask.Mask((1366, 15), True), 13, 0, 900, -1, 15, -1, 0)), #12
+                        (pygame.mask.Mask((1366, 15), True), 13, 0, 900, -1, 15, -1, 0)),  # 12
                        ((pygame.mask.Mask((1366, 15), True), 12, 0, 0, -1, 895, -1, -265),
-                        (pygame.mask.Mask((15, 900), True), 14, 1351, 0, 15, -1, 0, -1)), #13
+                        (pygame.mask.Mask((15, 900), True), 14, 1351, 0, 15, -1, 0, -1)),  # 13
                        ((pygame.mask.Mask((1366, 15), True), 15, 0, 0, -1, 895, -1, -265),
-                        (pygame.mask.Mask((15, 900), True), 13, 0, 0, 1300, -1, -400, -1)), #14
+                        (pygame.mask.Mask((15, 900), True), 13, 0, 0, 1300, -1, -400, -1)),  # 14
                        ((pygame.mask.Mask((15, 900), True), 12, 0, 0, 1300, -1, -400, -1),
-                        (pygame.mask.Mask((1366, 15), True), 14, 0, 900, -1, 15, -1, 0)) #15
+                        (pygame.mask.Mask((1366, 15), True), 14, 0, 900, -1, 15, -1, 0)),  # 15
+                       ((pygame.mask.Mask((200, 15), True), 2, 1200, 875, 1225, 300, -400, -250),)  # 16
                    ),
                    "interactables": (  # tuple of tuples(map index) of tuples (mask, action, maskX, maskY, params)
                        (),
                        ((interact_mask, showMessageOnScreen, 1555, 475, ("Grotte de la solitude: →", "Forêt et "
                                                                                                      "Chateau: ←")),
                         (interact_mask, openChest, 875, 125, 0)),
-                       (),
+                       ((interact_mask, interactChangeMap, 1585, 500, (16, 1250, 850, -400, -250)),),
                        ((interact_mask, showMessageOnScreen, 1230, 375, ("Chateau: ↑", "Village de la foret: ↓")),
                         (interact_mask, showMessageOnScreen, 287, 375, ("Enclot du ROI", "Interdiction d'y entrer.")),
                         (interact_mask, openChest, 77, 150, 0)),
+                       (),
                        (),
                        (),
                        (),
@@ -442,8 +457,9 @@ worldInfos_base = {"worldPos": pygame.Vector2(-200, -250),
                               [],
                               [],
                               [],
+                              [],
                               []
-                   ]
+                              ]
                    }
 worldInfos = worldInfos_base.copy()
 ennemiesList = []
@@ -571,7 +587,7 @@ def manageControls(keys, player, world, ennemiesList, PLAYER_CONSTS):
         player["playerAnimIndex"] = 16 + player["playerDir"]
         attack(player, PLAYER_CONSTS)
 
-    #TODO remove this before release
+    # TODO remove this before release
     if keys[pygame.K_EQUALS]:
         print(player["playerPos"], world["worldPos"])
         createEnnemy(ennemiesList, 0, 100, pygame.Rect(player["playerPos"].__copy__(), (50, 50)), 2,
@@ -729,6 +745,16 @@ def manageDisplay(screen, player, world, ennemies, needFlip, SNAKE_TEXTURES, ICO
             ennemy["animTimer"] = 0
         ennemy["animTimer"] += 1
 
+    if world["worldIndex"] in [i for i in range(16, 17)] and not "torche" in player["objects"]:
+        screen.fill("black")
+        if world["worldIndex"] == 16:
+            background = pygame.transform.scale(pygame.image.load("./resources/map/cave1_hidden.png").convert_alpha(),
+                                                (1766, 1177))
+            coll = pygame.transform.scale(pygame.image.load("./resources/map/cave1_hidden_coll.png").convert_alpha(),
+                                          (1766, 1177))
+            screen.blit(background, world["worldPos"])
+            screen.blit(coll, world["worldPos"])
+
     playerPos = player["playerPos"].__copy__()
     playerPos.x -= 30
     playerPos.y -= 80
@@ -829,7 +855,8 @@ def manageCollisions(screen, player, world, ennemies, PLAYER_CONSTS):
 
 
 def manageMainMenu(screen, world, player, ennemies, isInMainMenu, titleMusicPlaying, timeDelay, isInPauseMenu,
-                   fontButton, fontTitle, MAIN_MENU, TITLE_MUSIC, worldInfos_base, textToShow, running, BACKGROUND, back_x, back_y, movement):
+                   fontButton, fontTitle, MAIN_MENU, TITLE_MUSIC, worldInfos_base, textToShow, running, BACKGROUND,
+                   back_x, back_y, movement):
     pygame.mouse.set_visible(True)
     screen.fill("black")
 
@@ -838,7 +865,7 @@ def manageMainMenu(screen, world, player, ennemies, isInMainMenu, titleMusicPlay
         pygame.mixer.music.play(-1, 0, 0)
         titleMusicPlaying = True
 
-    #TODO correct values to make a good background
+    # TODO correct values to make a good background
     if movement:
         back_x += 2 * 2
         back_y += 1 * 2
@@ -921,7 +948,7 @@ def manageMainMenu(screen, world, player, ennemies, isInMainMenu, titleMusicPlay
         screen.blit(img, (text[1][0] - img.get_width() / 2, text[1][1]))
 
     pygame.display.flip()
-    return isInMainMenu, titleMusicPlaying, timeDelay, isInPauseMenu, running, back_x, back_y, movement
+    return isInMainMenu, titleMusicPlaying, timeDelay, isInPauseMenu, running, back_x, back_y, movement, player, world
 
 
 def managePauseMenu(screen, player, world, ennemies, buttons, isInMainMenu, titleMusicPlaying, timeDelay, fontTitle,
@@ -999,13 +1026,15 @@ def loadGame(screen, worldInfos, ennemiesList):
         print("Save file was not found")
 
 
-def manageInteractables(world, player, PLAYER_CONSTS):
+def manageInteractables(screen, world, player, ennemies, PLAYER_CONSTS):
     for interactable in world["interactables"][world["worldIndex"]]:
         if interactable[0].overlap(PLAYER_CONSTS["playerCollision"][0],
                                    (player["playerPos"].x - 7 - interactable[2] - world["worldPos"][0],
                                     player["playerPos"].y - interactable[3] + 20 - world["worldPos"][1])):
             if interactable[1] is openChest:
                 interactable[1](interactable[4], world, player, textToShow)
+            elif interactable[1] is interactChangeMap:
+                interactable[1](screen, world, player, ennemies, interactable[4])
             else:
                 interactable[1](interactable[4], textToShow)
 
@@ -1055,7 +1084,7 @@ while running:
             running = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_e:
-                manageInteractables(worldInfos, playerInfos, PLAYER_CONSTS)
+                manageInteractables(screen, worldInfos, playerInfos, ennemiesList, PLAYER_CONSTS)
 
     if pygame.key.get_pressed()[pygame.K_ESCAPE] and not isInMainMenu:
         if not isPauseKeyPressed and playerInfos["life"] > 0:
@@ -1073,15 +1102,16 @@ while running:
         dt = 0
 
     if isInMainMenu:
-        isInMainMenu, titleMusicPlaying, timeDelay, isInPauseMenu, running, back_x, back_y, movement = manageMainMenu(screen, worldInfos,
-                                                                                            playerInfos, ennemiesList,
-                                                                                            isInMainMenu,
-                                                                                            titleMusicPlaying,
-                                                                                            timeDelay, isInPauseMenu,
-                                                                                            fontButton, fontTitle,
-                                                                                            MAIN_MENU, TITLE_MUSIC,
-                                                                                            worldInfos_base, textToShow,
-                                                                                            running, BACKGROUND, back_x, back_y, movement)
+        isInMainMenu, titleMusicPlaying, timeDelay, isInPauseMenu, running, back_x, back_y, movement, playerInfos, worldInfos = manageMainMenu(
+            screen, worldInfos,
+            playerInfos, ennemiesList,
+            isInMainMenu,
+            titleMusicPlaying,
+            timeDelay, isInPauseMenu,
+            fontButton, fontTitle,
+            MAIN_MENU, TITLE_MUSIC,
+            worldInfos_base, textToShow,
+            running, BACKGROUND, back_x, back_y, movement)
     elif isInPauseMenu:
         isInMainMenu, titleMusicPlaying, timeDelay, isInPauseMenu = managePauseMenu(screen, playerInfos, worldInfos,
                                                                                     ennemiesList, PAUSE_MENU_BUTTONS,
