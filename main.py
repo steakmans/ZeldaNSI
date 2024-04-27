@@ -25,7 +25,8 @@ fontButton = pygame.font.SysFont("arial", 30)
 mouseMask = pygame.mask.Mask((1, 1), True)
 pygame.mixer.music.set_volume(0.1)
 textToShow = []
-interact_mask = pygame.mask.Mask((75, 75), True)
+interact_mask = pygame.mask.Mask((115, 115), True)
+game_finished = False
 
 back_x = 0
 back_y = 0
@@ -53,6 +54,7 @@ MAIN_MENU = {
 SOUND_EFFECTS = {
     "chest": pygame.mixer.Sound("resources/sounds/chest.mp3"),
     "small_chest": pygame.mixer.Sound("resources/sounds/small_chest.mp3"),
+    "trumpet": pygame.mixer.Sound("resources/sounds/trumpet.mp3"),
 }
 for sound in SOUND_EFFECTS.values():
     sound.set_volume(0.5)
@@ -161,7 +163,7 @@ PLAYER_CONSTS = {
 
 # Gameplay values
 playerInfos = {
-    "playerPos": pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2),
+    "playerPos": pygame.Vector2(686, 332),
     "playerSpeed": pygame.Vector2(0, 0),
     "life": 12,
     "maxHealth": 12,
@@ -197,6 +199,8 @@ def openChest(id, worldInfos, playerInfos, textToShow):
         worldInfos["chests"][worldInfos["worldIndex"]][id][1] = True
         showMessageOnScreen(("Vous avez obtenu " + str(worldInfos["chests"][worldInfos["worldIndex"]][id][0][1]) + " " +
                              worldInfos["chests"][worldInfos["worldIndex"]][id][0][0],), textToShow)
+        if worldInfos["chests"][worldInfos["worldIndex"]][id][0][1] == "épée":
+            showMessageOnScreen(("Vous pouvez désormais attaquer en appuyant sur ESPACE",), textToShow)
         if worldInfos["chests"][worldInfos["worldIndex"]][id][3]:
             SOUND_EFFECTS["small_chest"].play()
         else:
@@ -208,8 +212,26 @@ def interactChangeMap(screen, world, player, ennemies, args):
                                                                                                          args[4]))
 
 
-worldInfos_base = {"worldPos": pygame.Vector2(-200, -250),
-                   "worldIndex": 0,
+def interactNpc(texts, textToShow, objects, player, condition):
+    items = 0
+    for object in condition:
+        if object in player["objects"]:
+            items += 1
+
+    if items == len(condition) and items != 0:
+        return True
+    else:
+
+        if len(objects) > 0:
+            if not objects[0] in player["objects"]:
+                player["objects"][objects[0]] = objects[1]
+                texts = texts + ("Vous avez obtenu " + str(objects[1]) + " " + objects[0],)
+        showMessageOnScreen(texts, textToShow)
+        return False
+
+
+worldInfos_base = {"worldPos": pygame.Vector2(-400, 0),
+                   "worldIndex": 27,
                    "music": ("resources/music/spawn_village_theme.mp3",
                              "resources/music/field_theme.mp3",
                              "resources/music/field_theme.mp3",
@@ -232,7 +254,12 @@ worldInfos_base = {"worldPos": pygame.Vector2(-200, -250),
                              "resources/music/cave_theme.mp3",
                              "resources/music/cave_theme.mp3",
                              "resources/music/cave_theme.mp3",
-                             "resources/music/cave_theme.mp3",),
+                             "resources/music/cave_theme.mp3",
+                             "resources/music/cave_village_theme.mp3",
+                             "resources/music/field_theme.mp3",
+                             "resources/music/field_theme.mp3",
+                             "resources/music/house_theme.mp3",
+                             "resources/music/house_theme.mp3"),
                    "background": (
                        pygame.transform.scale(pygame.image.load("./resources/map/spawn.png").convert_alpha(),
                                               (1766, 1177)),
@@ -279,7 +306,17 @@ worldInfos_base = {"worldPos": pygame.Vector2(-200, -250),
                        pygame.transform.scale(pygame.image.load("./resources/map/cave6.png").convert_alpha(),
                                               (1766, 1177)),
                        pygame.transform.scale(pygame.image.load("./resources/map/cave7.png").convert_alpha(),
-                                              (1766, 1177))
+                                              (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("./resources/map/cave_village1.png").convert_alpha(),
+                                              (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("./resources/map/yard1.png").convert_alpha(),
+                                              (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("resources/map/yard2.png").convert_alpha(),
+                                              (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("resources/map/house_princesse.png").convert_alpha(),
+                                              (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("resources/map/house_hero.png").convert_alpha(),
+                                              (1766, 1177)),
                    ),
                    "colliding": (
                        pygame.transform.scale(pygame.image.load("./resources/map/spawn_coll.png").convert_alpha(),
@@ -331,7 +368,19 @@ worldInfos_base = {"worldPos": pygame.Vector2(-200, -250),
                        pygame.transform.scale(pygame.image.load("./resources/map/cave6_coll.png").convert_alpha(),
                                               (1766, 1177)),
                        pygame.transform.scale(pygame.image.load("./resources/map/cave7_coll.png").convert_alpha(),
-                                              (1766, 1177))
+                                              (1766, 1177)),
+                       pygame.transform.scale(
+                           pygame.image.load("./resources/map/cave_village1_coll.png").convert_alpha(),
+                           (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("./resources/map/yard1_coll.png").convert_alpha(),
+                                              (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("resources/map/yard2_coll.png").convert_alpha(),
+                                              (1766, 1177)),
+                       pygame.transform.scale(
+                           pygame.image.load("resources/map/house_princesse_coll.png").convert_alpha(),
+                           (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("resources/map/house_hero_coll.png").convert_alpha(),
+                                              (1766, 1177)),
                    ),
                    "foreground": (
                        pygame.transform.scale(pygame.image.load("./resources/map/spawn_fore.png").convert_alpha(),
@@ -380,10 +429,21 @@ worldInfos_base = {"worldPos": pygame.Vector2(-200, -250),
                                               (1766, 1177)),
                        pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(),
                                               (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(),
+                                              (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(),
+                                              (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(),
+                                              (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(),
+                                              (1766, 1177)),
+                       pygame.transform.scale(pygame.image.load("./resources/map/empty.png").convert_alpha(),
+                                              (1766, 1177)),
                    ),
                    "collisions": [],
-                   "ennemiesCleared": [False] * 23,
+                   "ennemiesCleared": [False] * 28,
                    # (Type, Life, Pos, Rect size, Damage, ViewDistance, ReachDistance, TimeToAttack)
+                   # TODO add all ennemies
                    "ennemiesForMap": ((),  # 0
                                       (),  # 1
                                       (),  # 2
@@ -391,6 +451,11 @@ worldInfos_base = {"worldPos": pygame.Vector2(-200, -250),
                                       ((0, 100, (200, 1000), (50, 50), 1, 300, 15, 1),
                                        (0, 100, (800, 950), (50, 50), 1, 300, 15, 1),
                                        (0, 100, (1200, 200), (50, 50), 1, 300, 15, 1)),  # 4
+                                      (),
+                                      (),
+                                      (),
+                                      (),
+                                      (),
                                       (),
                                       (),
                                       (),
@@ -423,7 +488,8 @@ worldInfos_base = {"worldPos": pygame.Vector2(-200, -250),
                          -1, -400, -1),),  # 2
                        ((pygame.mask.Mask((15, 300), True), 1, 1351, 905 / 2 - 250 / 2, 0,
                          -1, 0, -1),
-                        (pygame.mask.Mask((300, 15), True), 4, 400, 900, -1, 20, -1, 0)),  # 3
+                        (pygame.mask.Mask((300, 15), True), 4, 400, 900, -1, 20, -1, 0),
+                        (pygame.mask.Mask((1300, 15), True), 24, 25, 0, -1, 875, -1, -250)),  # 3
                        ((pygame.mask.Mask((300, 15), True), 3, 400, 0, -1, 870, -1, -265),
                         (pygame.mask.Mask((900, 15), True), 5, 25, 900, -1, 20, -1, 0)),  # 4
                        ((pygame.mask.Mask((900, 15), True), 4, 25, 0, -1, 870, -1, -265),
@@ -466,23 +532,37 @@ worldInfos_base = {"worldPos": pygame.Vector2(-200, -250),
                        ((pygame.mask.Mask((15, 900), True), 12, 0, 0, 1300, -1, -400, -1),
                         (pygame.mask.Mask((1366, 15), True), 14, 0, 900, -1, 15, -1, 0)),  # 15
                        ((pygame.mask.Mask((200, 15), True), 2, 1200, 875, 1225, 300, -400, -250),
-                        (pygame.mask.Mask((15, 1000), True), 17, 1350, 75, 25, -1, 0, -1)), # 16
-                       ((pygame.mask.Mask((15, 1000), True), 16, 0, 75, 1300, -1, -400, -1),), #17
-                       (),
-                       (),
-                       (),
-                       (),
-                       ()
+                        (pygame.mask.Mask((15, 1000), True), 17, 1350, 75, 25, -1, 0, -1)),  # 16
+                       ((pygame.mask.Mask((15, 1000), True), 16, 0, 75, 1300, -1, -400, -1),
+                        (pygame.mask.Mask((1300, 15), True), 18, 0, 900, -1, 25, -1, 0),
+                        (pygame.mask.Mask((300, 15), True), 22, 1000, 0, -1, 875, -1, -250)),  # 17
+                       ((pygame.mask.Mask((1300, 15), True), 17, 0, 0, -1, 875, -1, -250),
+                        (pygame.mask.Mask((15, 500), True), 19, 1350, 400, 25, -1, 0, -1)),  # 18
+                       ((pygame.mask.Mask((15, 500), True), 18, 0, 400, 1325, -1, -400, -1),
+                        (pygame.mask.Mask((1300, 15), True), 20, 0, 0, -1, 875, -1, -250),),  # 19
+                       ((pygame.mask.Mask((1300, 15), True), 19, 0, 900, -1, 25, -1, 0),
+                        (pygame.mask.Mask((1300, 15), True), 21, 0, 0, -1, 875, -1, -250)),  # 20
+                       ((pygame.mask.Mask((1300, 15), True), 20, 0, 900, -1, 25, -1, 0),
+                        (pygame.mask.Mask((15, 200), True), 22, 0, 100, 1325, -1, -400, -1)),  # 21
+                       ((pygame.mask.Mask((300, 15), True), 17, 1000, 900, -1, 25, -1, 0),
+                        (pygame.mask.Mask((400, 15), True), 23, 500, 0, -1, 875, -1, -250),
+                        (pygame.mask.Mask((15, 200), True), 21, 1350, 100, 25, -1, 0, -1)),  # 22
+                       ((pygame.mask.Mask((400, 15), True), 22, 500, 900, -1, 25, -1, 0),),  # 23
+                       ((pygame.mask.Mask((1300, 15), True), 3, 25, 900, -1, 25, -1, 0),
+                        (pygame.mask.Mask((1300, 15), True), 25, 0, 0, -1, 875, -1, -250)),  # 24
+                       ((pygame.mask.Mask((1300, 15), True), 24, 0, 900, -1, 50, -1, 0),),  # 25
+                       ((pygame.mask.Mask((100, 15), True), 15, 643, 655, 687, 406, -400, 0),),
+                       ((pygame.mask.Mask((100, 15), True), 0, 643, 655, 442, 323, 0, 0),)
                    ),
                    "interactables": (  # tuple of tuples(map index) of tuples (mask, action, maskX, maskY, params)
-                       (),
-                       ((interact_mask, showMessageOnScreen, 1555, 475, ("Grotte de la solitude: →", "Forêt et "
+                       ((interact_mask, interactChangeMap, 384, 330, (27, 683, 650, -200, -250)),),
+                       ((interact_mask, showMessageOnScreen, 1535, 475, ("Grotte de la solitude: →", "Forêt et "
                                                                                                      "Chateau: ←")),
-                        (interact_mask, openChest, 875, 125, 0)),
-                       ((interact_mask, interactChangeMap, 1585, 500, (16, 1250, 850, -400, -250)),),
-                       ((interact_mask, showMessageOnScreen, 1230, 375, ("Chateau: ↑", "Village de la foret: ↓")),
-                        (interact_mask, showMessageOnScreen, 287, 375, ("Enclot du ROI", "Interdiction d'y entrer.")),
-                        (interact_mask, openChest, 77, 150, 0)),
+                        (interact_mask, openChest, 855, 125, 0)),
+                       ((interact_mask, interactChangeMap, 1565, 500, (16, 1250, 850, -400, -250)),),
+                       ((interact_mask, showMessageOnScreen, 1210, 375, ("Chateau: ↑", "Village de la foret: ↓")),
+                        (interact_mask, showMessageOnScreen, 267, 375, ("Enclot du ROI", "Interdiction d'y entrer.")),
+                        (interact_mask, openChest, 57, 150, 0)),
                        (),
                        (),
                        (),
@@ -493,6 +573,11 @@ worldInfos_base = {"worldPos": pygame.Vector2(-200, -250),
                        (),
                        (),
                        (),
+                       ((interact_mask, interactNpc, 1300, 720, (("Snif. Snif. Mon ami est mort......",
+                                                                  "Oh qui êtes vous? C'est mon père qui vous envoie? Très bien allez chercher mon grimoir.",
+                                                                  "Il est dans la seule maison ouverte du village, tout les habitants ont fuient."),
+                                                                 (), ())),),  # 14
+                       ((interact_mask, interactChangeMap, 1030, 375, (26, 683, 650, -200, -250)),),
                        (),
                        (),
                        (),
@@ -500,13 +585,29 @@ worldInfos_base = {"worldPos": pygame.Vector2(-200, -250),
                        (),
                        (),
                        (),
+                       ((interact_mask, interactNpc, 827, 670, ((
+                                                                "Qui êtes vous? Que se passe-t-il? Le royaumes est en danger?? C'est mon père qui vous envoie?",
+                                                                "Tenez prenez ma pioche mais faites y attention, c'est un héritage de famille qui m'est très précieux."),
+                                                                ("pioche sacrée", 1), ())),),
+                       (),
+                       ((interact_mask, interactNpc, 827, 275, ((
+                                                                "Vite jeune homme, allez chercher le prince dans la caverne et la princesse dans la foret!!",
+                                                                "Le barrage du nord est en train de ceder il me faut absolument la pioche sacrée et le grimoir de magie!!",
+                                                                "Ne tardez pas, le sort du royaume dépend de vous."),
+                                                                (), ("pioche sacrÃ©e", "grimoir de magie"))),),
                        (),
                        ()
                    ),
+                   # TODO add all chests
                    "chests": [[],
-                              [[("torche", 1), False, (875, 95), False]],
+                              [[("bottes", 2), False, (875, 95), False]],
                               [],
-                              [[("pièces", 50), False, (77, 120), True]],
+                              [[("épée", 1), False, (77, 120), False]],
+                              [],
+                              [],
+                              [[("coeur", 1), False, (1700, 50), True]],
+                              [],
+                              [],
                               [],
                               [],
                               [],
@@ -660,28 +761,29 @@ def manageControls(keys, player, world, ennemiesList, PLAYER_CONSTS):
         createEnnemy(ennemiesList, 0, 100, pygame.Rect(player["playerPos"].__copy__(), (50, 50)), 2,
                      timeToAttack=1)
 
-    if keys[pygame.K_LSHIFT]:
+    if keys[pygame.K_LSHIFT] and "bottes" in player["objects"]:
         player["speed"] = 400
     else:
         player["speed"] = 200
     if not player["attacking"]:
-        if keys[pygame.K_q]:
+        if keys[pygame.K_q] or keys[pygame.K_LEFT]:
             player["playerSpeed"].x = player["speed"]
             player["playerDir"] = 2
-        if keys[pygame.K_d]:
+        if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
             player["playerSpeed"].x = -player["speed"]
             player["playerDir"] = 3
-        if not keys[pygame.K_d] and not keys[pygame.K_q]:
+        if not (keys[pygame.K_d] or keys[pygame.K_RIGHT]) and not (keys[pygame.K_q] or keys[pygame.K_LEFT]):
             player["playerSpeed"].x = 0
-        if keys[pygame.K_z]:
+        if keys[pygame.K_z] or keys[pygame.K_UP]:
             player["playerSpeed"].y = player["speed"]
             player["playerDir"] = 1
-        if keys[pygame.K_s]:
+        if keys[pygame.K_s] or keys[pygame.K_DOWN]:
             player["playerSpeed"].y = -player["speed"]
             player["playerDir"] = 0
-        if not keys[pygame.K_z] and not keys[pygame.K_s]:
+        if not (keys[pygame.K_z] or keys[pygame.K_UP]) and not (keys[pygame.K_s] or keys[pygame.K_DOWN]):
             player["playerSpeed"].y = 0
 
+    # Makes the player move at the same speed in all directions
     if player["playerSpeed"].length() != 0:
         player["playerSpeed"].clamp_magnitude(player["speed"])
 
@@ -812,7 +914,7 @@ def manageDisplay(screen, player, world, ennemies, needFlip, SNAKE_TEXTURES, ICO
             ennemy["animTimer"] = 0
         ennemy["animTimer"] += 1
 
-    if world["worldIndex"] in [i for i in range(16, 17)] and not "torche" in player["objects"]:
+    if world["worldIndex"] in [i for i in range(16, 23)] and not "torche" in player["objects"]:
         screen.fill("black")
         if world["worldIndex"] == 16:
             background = pygame.transform.scale(pygame.image.load("./resources/map/cave1_hidden.png").convert_alpha(),
@@ -846,6 +948,13 @@ def manageDisplay(screen, player, world, ennemies, needFlip, SNAKE_TEXTURES, ICO
         for i in range(len(textToShow)):
             img = fontButton.render(textToShow[i][0], True, "black")
             screen.blit(img, (35, (3 / 4) * screen.get_height() + 25 + i * 50))
+
+    for interactable in world["interactables"][world["worldIndex"]]:
+        if interactable[0].overlap(PLAYER_CONSTS["playerCollision"][0],
+                                   (player["playerPos"].x - 7 - interactable[2] - world["worldPos"][0],
+                                    player["playerPos"].y - interactable[3] + 20 - world["worldPos"][1])):
+            img = fontButton.render("Appuyer sur E pour interagir", True, "black")
+            screen.blit(img, (screen.get_width() - img.get_width() - 20, 20))
 
     if debug:
         for maptrig in world["changeMapTriggers"][world["worldIndex"]]:
@@ -923,7 +1032,7 @@ def manageCollisions(screen, player, world, ennemies, PLAYER_CONSTS):
 
 def manageMainMenu(screen, world, player, ennemies, isInMainMenu, titleMusicPlaying, timeDelay, isInPauseMenu,
                    fontButton, fontTitle, MAIN_MENU, TITLE_MUSIC, worldInfos_base, textToShow, running, BACKGROUND,
-                   back_x, back_y, movement):
+                   back_x, back_y, movement, SOUND_EFFECTS):
     pygame.mouse.set_visible(True)
     screen.fill("black")
 
@@ -971,7 +1080,7 @@ def manageMainMenu(screen, world, player, ennemies, isInMainMenu, titleMusicPlay
                 pygame.mixer.music.load(world["music"][0])
                 pygame.mixer.music.play(-1, 0, 0)
                 player = {
-                    "playerPos": pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2),
+                    "playerPos": pygame.Vector2(686, 332),
                     "playerSpeed": pygame.Vector2(0, 0),
                     "life": 12,
                     "maxHealth": 12,
@@ -989,13 +1098,17 @@ def manageMainMenu(screen, world, player, ennemies, isInMainMenu, titleMusicPlay
                 }
                 textToShow.clear()
                 world = worldInfos_base.copy()
-                player["playerPos"] = pygame.Vector2(screen.get_width() / 2, screen.get_height() / 2)
-                world["worldPos"] = pygame.Vector2(-200, -250)
+                player["playerPos"] = pygame.Vector2(686, 332)
+                world["worldPos"] = pygame.Vector2(-400, 0)
                 for chest in world["chests"]:
                     for i in range(len(chest)):
                         chest[i][1] = False
-
                 saveGame(world, player)
+                showMessageOnScreen(("Message du ROI:",
+                                     "Vous êtes appelé a venir rencontrer le ROI, ceci n'est pas une demande mais un devoir.",
+                                     "Le chateau se trouve au nord ouest du village. Partez sans attendre."),
+                                    textToShow)
+                SOUND_EFFECTS["trumpet"].play()
 
             if button[1] == "Reprendre" and timeDelay >= 15 and exists("save/save.json"):
                 isInMainMenu = False
@@ -1093,7 +1206,7 @@ def loadGame(screen, worldInfos, ennemiesList):
         print("Save file was not found")
 
 
-def manageInteractables(screen, world, player, ennemies, PLAYER_CONSTS):
+def manageInteractables(screen, world, player, ennemies, PLAYER_CONSTS, game_finished):
     for interactable in world["interactables"][world["worldIndex"]]:
         if interactable[0].overlap(PLAYER_CONSTS["playerCollision"][0],
                                    (player["playerPos"].x - 7 - interactable[2] - world["worldPos"][0],
@@ -1102,8 +1215,13 @@ def manageInteractables(screen, world, player, ennemies, PLAYER_CONSTS):
                 interactable[1](interactable[4], world, player, textToShow)
             elif interactable[1] is interactChangeMap:
                 interactable[1](screen, world, player, ennemies, interactable[4])
+            elif interactable[1] is interactNpc:
+                game_finished = interactable[1](interactable[4][0], textToShow, interactable[4][1], player,
+                                                interactable[4][2])
             else:
                 interactable[1](interactable[4], textToShow)
+
+    return game_finished
 
 
 def manageDeath(screen, player, world, ennemies, timer, isInMainMenu, timeDelay, fontTitle, fontButton):
@@ -1150,8 +1268,12 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_e:
-                manageInteractables(screen, worldInfos, playerInfos, ennemiesList, PLAYER_CONSTS)
+            if event.key == pygame.K_e and not game_finished:
+                game_finished = manageInteractables(screen, worldInfos, playerInfos, ennemiesList, PLAYER_CONSTS,
+                                                    game_finished)
+
+    if game_finished:
+        continue
 
     if pygame.key.get_pressed()[pygame.K_ESCAPE] and not isInMainMenu:
         if not isPauseKeyPressed and playerInfos["life"] > 0:
@@ -1178,7 +1300,7 @@ while running:
             fontButton, fontTitle,
             MAIN_MENU, TITLE_MUSIC,
             worldInfos_base, textToShow,
-            running, BACKGROUND, back_x, back_y, movement)
+            running, BACKGROUND, back_x, back_y, movement, SOUND_EFFECTS)
     elif isInPauseMenu:
         isInMainMenu, titleMusicPlaying, timeDelay, isInPauseMenu = managePauseMenu(screen, playerInfos, worldInfos,
                                                                                     ennemiesList, PAUSE_MENU_BUTTONS,
