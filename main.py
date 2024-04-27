@@ -1043,14 +1043,14 @@ def manageMainMenu(screen, world, player, ennemies, isInMainMenu, titleMusicPlay
 
     # TODO correct values to make a good background
     if movement:
-        back_x += 2 * 2
+        back_x += 1.25 * 2
         back_y += 1 * 2
         if back_y >= 0:
             movement = False
     else:
-        back_x -= 2 * 2
+        back_x -= 1.25 * 2
         back_y -= 1 * 2
-        if back_y <= -1280 * 2:
+        if back_y <= -1920 * 4 + 1366:
             movement = True
 
     screen.blit(BACKGROUND, (back_x, back_y))
