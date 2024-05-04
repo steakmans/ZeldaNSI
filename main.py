@@ -167,7 +167,7 @@ playerInfos = {
     "playerSpeed": pygame.Vector2(0, 0),
     "life": 12,
     "maxHealth": 12,
-    "objects": {},
+    "objects": {"coeur": 0},
     "damage": 50,
     "speed": 200,
     "playerXToMove": False,
@@ -188,6 +188,7 @@ def showMessageOnScreen(texts, textToShow):
         textToShow.append((txt, time.time() + 5))
 
 
+# TODO change message appearance
 def openChest(id, worldInfos, playerInfos, textToShow):
     if not worldInfos["chests"][worldInfos["worldIndex"]][id][1]:
         if worldInfos["chests"][worldInfos["worldIndex"]][id][0][0] in playerInfos["objects"]:
@@ -201,6 +202,8 @@ def openChest(id, worldInfos, playerInfos, textToShow):
                              worldInfos["chests"][worldInfos["worldIndex"]][id][0][0],), textToShow)
         if worldInfos["chests"][worldInfos["worldIndex"]][id][0][1] == "épée":
             showMessageOnScreen(("Vous pouvez désormais attaquer en appuyant sur ESPACE",), textToShow)
+        elif worldInfos["chests"][worldInfos["worldIndex"]][id][0][1] == "bottes":
+            showMessageOnScreen(("Vous pouvez désormais courir en appuyant sur MAJ",), textToShow)
         if worldInfos["chests"][worldInfos["worldIndex"]][id][3]:
             SOUND_EFFECTS["small_chest"].play()
         else:
@@ -565,12 +568,12 @@ worldInfos_base = {"worldPos": pygame.Vector2(-400, 0),
                         (interact_mask, openChest, 57, 150, 0)),
                        (),
                        (),
+                       ((interact_mask, openChest, 1530, 734, 0),),
+                       (),
+                       ((interact_mask, openChest, 970, 100, 0),),
                        (),
                        (),
-                       (),
-                       (),
-                       (),
-                       (),
+                       ((interact_mask, openChest, 857, 218, 0),),
                        (),
                        (),
                        ((interact_mask, interactNpc, 1300, 720, (("Snif. Snif. Mon ami est mort......",
@@ -582,30 +585,34 @@ worldInfos_base = {"worldPos": pygame.Vector2(-400, 0),
                        (),
                        (),
                        (),
-                       (),
+                       ((interact_mask, openChest, 1590, 92, 0),),
                        (),
                        (),
                        ((interact_mask, interactNpc, 827, 670, ((
                                                                 "Qui êtes vous? Que se passe-t-il? Le royaumes est en danger?? C'est mon père qui vous envoie?",
                                                                 "Tenez prenez ma pioche mais faites y attention, c'est un héritage de famille qui m'est très précieux."),
-                                                                ("pioche sacrée", 1), ())),),
+                                                                ("pioche sacree", 1), ())),),
                        (),
                        ((interact_mask, interactNpc, 827, 275, ((
                                                                 "Vite jeune homme, allez chercher le prince dans la caverne et la princesse dans la foret!!",
                                                                 "Le barrage du nord est en train de ceder il me faut absolument la pioche sacrée et le grimoir de magie!!",
                                                                 "Ne tardez pas, le sort du royaume dépend de vous."),
-                                                                (), ("pioche sacrÃ©e", "grimoir de magie"))),),
-                       (),
+                                                                (), ("pioche sacree", "grimoir de magie"))),),
+                       ((interact_mask, openChest, 1001, 269, 0),),
                        ()
                    ),
-                   # TODO add all chests
                    "chests": [[],
                               [[("bottes", 2), False, (875, 95), False]],
                               [],
                               [[("épée", 1), False, (77, 120), False]],
                               [],
                               [],
-                              [[("coeur", 1), False, (1700, 50), True]],
+                              [[("coeur", 1), False, (1552, 702), True]],
+                              [],
+                              [[("coeur", 1), False, (992, 62), True]],
+                              [],
+                              [],
+                              [[("torche", 1), False, (879, 180), True]],
                               [],
                               [],
                               [],
@@ -614,18 +621,13 @@ worldInfos_base = {"worldPos": pygame.Vector2(-400, 0),
                               [],
                               [],
                               [],
+                              [[("coeur", 1), False, (1612, 54), True]],
                               [],
                               [],
                               [],
                               [],
                               [],
-                              [],
-                              [],
-                              [],
-                              [],
-                              [],
-                              [],
-                              [],
+                              [[("grimoir de magie", 1), False, (1023, 231), True]],
                               []
                               ]
                    }
@@ -757,9 +759,7 @@ def manageControls(keys, player, world, ennemiesList, PLAYER_CONSTS):
 
     # TODO remove this before release
     if keys[pygame.K_EQUALS]:
-        print(player["playerPos"], world["worldPos"])
-        createEnnemy(ennemiesList, 0, 100, pygame.Rect(player["playerPos"].__copy__(), (50, 50)), 2,
-                     timeToAttack=1)
+        print(player["playerPos"], world["worldPos"], world["worldIndex"])
 
     if keys[pygame.K_LSHIFT] and "bottes" in player["objects"]:
         player["speed"] = 400
@@ -1041,7 +1041,6 @@ def manageMainMenu(screen, world, player, ennemies, isInMainMenu, titleMusicPlay
         pygame.mixer.music.play(-1, 0, 0)
         titleMusicPlaying = True
 
-    # TODO correct values to make a good background
     if movement:
         back_x += 1.25 * 2
         back_y += 1 * 2
@@ -1084,7 +1083,7 @@ def manageMainMenu(screen, world, player, ennemies, isInMainMenu, titleMusicPlay
                     "playerSpeed": pygame.Vector2(0, 0),
                     "life": 12,
                     "maxHealth": 12,
-                    "objects": {},
+                    "objects": {"coeur": 0},
                     "damage": 50,
                     "speed": 200,
                     "playerXToMove": False,
@@ -1100,6 +1099,8 @@ def manageMainMenu(screen, world, player, ennemies, isInMainMenu, titleMusicPlay
                 world = worldInfos_base.copy()
                 player["playerPos"] = pygame.Vector2(686, 332)
                 world["worldPos"] = pygame.Vector2(-400, 0)
+                player["playerXToMove"] = True
+                player["playerYToMove"] = True
                 for chest in world["chests"]:
                     for i in range(len(chest)):
                         chest[i][1] = False
@@ -1322,6 +1323,12 @@ while running:
     for text in textToShow.copy():
         if text[1] < time.time():
             textToShow.remove(text)
+
+    for i in range(playerInfos["objects"]["coeur"]):
+        playerInfos["objects"]["coeur"] -= 1
+        playerInfos["life"] += 4
+        playerInfos["maxHealth"] += 4
+
     dt = clock.tick(60) / 1000
     timeDelay += 1
     timer += dt
