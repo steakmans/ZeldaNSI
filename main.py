@@ -188,7 +188,6 @@ def showMessageOnScreen(texts, textToShow):
         textToShow.append((txt, time.time() + 5))
 
 
-# TODO change message appearance
 def openChest(id, worldInfos, playerInfos, textToShow):
     if not worldInfos["chests"][worldInfos["worldIndex"]][id][1]:
         if worldInfos["chests"][worldInfos["worldIndex"]][id][0][0] in playerInfos["objects"]:
@@ -198,12 +197,19 @@ def openChest(id, worldInfos, playerInfos, textToShow):
             playerInfos["objects"][worldInfos["chests"][worldInfos["worldIndex"]][id][0][0]] = \
                 worldInfos["chests"][worldInfos["worldIndex"]][id][0][1]
         worldInfos["chests"][worldInfos["worldIndex"]][id][1] = True
-        showMessageOnScreen(("Vous avez obtenu " + str(worldInfos["chests"][worldInfos["worldIndex"]][id][0][1]) + " " +
-                             worldInfos["chests"][worldInfos["worldIndex"]][id][0][0],), textToShow)
-        if worldInfos["chests"][worldInfos["worldIndex"]][id][0][1] == "épée":
-            showMessageOnScreen(("Vous pouvez désormais attaquer en appuyant sur ESPACE",), textToShow)
-        elif worldInfos["chests"][worldInfos["worldIndex"]][id][0][1] == "bottes":
-            showMessageOnScreen(("Vous pouvez désormais courir en appuyant sur MAJ",), textToShow)
+        if worldInfos["chests"][worldInfos["worldIndex"]][id][0][0] == "épée":
+            showMessageOnScreen(
+                ("Vous avez obtenu " + str(worldInfos["chests"][worldInfos["worldIndex"]][id][0][1]) + " " +
+                 worldInfos["chests"][worldInfos["worldIndex"]][id][0][0],"Vous pouvez désormais attaquer en appuyant sur ESPACE"), textToShow)
+        elif worldInfos["chests"][worldInfos["worldIndex"]][id][0][0] == "bottes":
+            showMessageOnScreen(
+                ("Vous avez obtenu " + str(worldInfos["chests"][worldInfos["worldIndex"]][id][0][1]) + " " +
+                 worldInfos["chests"][worldInfos["worldIndex"]][id][0][0],
+                 "Vous pouvez desormais courire en appuyant sur MAJ"), textToShow)
+        else:
+            showMessageOnScreen(
+                ("Vous avez obtenu " + str(worldInfos["chests"][worldInfos["worldIndex"]][id][0][1]) + " " +
+                 worldInfos["chests"][worldInfos["worldIndex"]][id][0][0],), textToShow)
         if worldInfos["chests"][worldInfos["worldIndex"]][id][3]:
             SOUND_EFFECTS["small_chest"].play()
         else:
@@ -446,32 +452,63 @@ worldInfos_base = {"worldPos": pygame.Vector2(-400, 0),
                    "collisions": [],
                    "ennemiesCleared": [False] * 28,
                    # (Type, Life, Pos, Rect size, Damage, ViewDistance, ReachDistance, TimeToAttack)
-                   # TODO add all ennemies
                    "ennemiesForMap": ((),  # 0
                                       (),  # 1
                                       (),  # 2
                                       (),  # 3
-                                      ((0, 100, (200, 1000), (50, 50), 1, 300, 15, 1),
-                                       (0, 100, (800, 950), (50, 50), 1, 300, 15, 1),
-                                       (0, 100, (1200, 200), (50, 50), 1, 300, 15, 1)),  # 4
+                                      ((0, 100, (200, 1000), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (800, 950), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (1200, 200), (50, 50), 1, 600, 15, 1)),  # 4
+                                      ((0, 100, (400, 400), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (400, 900), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (700, 650), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (1000, 400), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (1000, 900), (50, 50), 1, 600, 15, 1)),
+                                      (),
+                                      ((0, 100, (1600, 115), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (1550, 115), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (1500, 115), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (1600, 165), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (1500, 165), (50, 50), 1, 600, 15, 1)),
+                                      ((0, 100, (625, 450), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (725, 450), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (825, 450), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (925, 450), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (1025, 450), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (1125, 450), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (550, 450), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (725, 650), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (825, 650), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (925, 650), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (1025, 650), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (1125, 650), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (550, 650), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (550, 650), (50, 50), 1, 600, 15, 1),),
+                                      ((0, 100, (800, 550), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (900, 450), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (1000, 550), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (900, 550), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (900, 650), (50, 50), 1, 600, 15, 1),
+                                       (0, 100, (900, 750), (50, 50), 1, 600, 15, 1),),
+                                      ((0, 500, (880, 546), (50, 50), 2, 600, 60, 0.75),),
                                       (),
                                       (),
                                       (),
                                       (),
                                       (),
+                                      ((0, 200, (1180, 260), (50, 50), 1, 600, 30, 0.5),),
+                                      ((0, 200, (1110, 770), (50, 50), 1, 600, 30, 0.5),
+                                       (0, 200, (1110, 970), (50, 50), 1, 600, 30, 0.5)),
+                                      ((0, 150, (1350, 550), (50, 50), 1, 600, 30, 0.5),
+                                       (0, 150, (1350, 850), (50, 50), 1, 600, 30, 0.5)),
                                       (),
-                                      (),
-                                      (),
-                                      (),
-                                      (),
-                                      (),
-                                      (),
-                                      (),
-                                      (),
-                                      (),
-                                      (),
-                                      (),
-                                      (),
+                                      ((0, 500, (610, 320), (50, 50), 2, 600, 60, 0.75),),
+                                      ((0, 100, (570, 560), (50, 50), 1, 600, 30, 0.25),
+                                       (0, 100, (1250, 560), (50, 50), 1, 600, 30, 0.25),
+                                       (0, 200, (945, 280), (50, 50), 2, 600, 30, 1),
+                                       (0, 200, (945, 900), (50, 50), 2, 600, 30, 1),
+                                       (0, 600, (945, 560), (50, 50), 4, 600, 60, 2),),
+                                      ((0, 500, (1420, 950), (50, 50), 2, 600, 60, 0.75),), #22
                                       (),
                                       (),
                                       (),
@@ -690,7 +727,7 @@ def changeMap(screen, world, player, ennemies, mapIndex,
     player["playerPos"] = playerPos
     if spawnEnnemies and not world["ennemiesCleared"][mapIndex]:
         for ennemy in world["ennemiesForMap"][mapIndex]:
-            createEnnemy(ennemies, ennemy[0], ennemy[1], pygame.Rect(ennemy[2], ennemy[3]), ennemy[4], ennemy[5],
+            createEnnemy(ennemies, ennemy[0], ennemy[1], pygame.Rect((ennemy[2][0] + world["worldPos"].x, ennemy[2][1] + world["worldPos"].y), ennemy[3]), ennemy[4], ennemy[5],
                          ennemy[6], ennemy[7])
 
 
@@ -751,13 +788,12 @@ def manageEnnemies(ennemies, player, world, MASK_SNAKE, dt, DEATH_MUSIC):
             ennemy["attackTimer"] = 0
 
 
-def manageControls(keys, player, world, ennemiesList, PLAYER_CONSTS):
+def manageControls(keys, player, world, PLAYER_CONSTS):
     if keys[pygame.K_SPACE] and not player["attacking"] and "épée" in player["objects"]:
         player["attacking"] = True
         player["playerAnimIndex"] = 16 + player["playerDir"]
         attack(player, PLAYER_CONSTS)
 
-    # TODO remove this before release
     if keys[pygame.K_EQUALS]:
         print(player["playerPos"], world["worldPos"], world["worldIndex"])
 
@@ -862,7 +898,6 @@ def manageMovement(screen, player, world, ennemies, dt):
 
 def manageDisplay(screen, player, world, ennemies, needFlip, SNAKE_TEXTURES, ICONS, dt, PLAYER_CONSTS, textToShow,
                   fontButton):
-    debug = True
     screen.fill("black")
 
     screen.blit(world["background"][world["worldIndex"]], world["worldPos"])
@@ -955,15 +990,6 @@ def manageDisplay(screen, player, world, ennemies, needFlip, SNAKE_TEXTURES, ICO
                                     player["playerPos"].y - interactable[3] + 20 - world["worldPos"][1])):
             img = fontButton.render("Appuyer sur E pour interagir", True, "black")
             screen.blit(img, (screen.get_width() - img.get_width() - 20, 20))
-
-    if debug:
-        for maptrig in world["changeMapTriggers"][world["worldIndex"]]:
-            pygame.draw.rect(screen, "red", maptrig[0].get_rect(
-                topleft=(maptrig[2] * 1.3 + world["worldPos"].x, maptrig[3] * 1.3 + world["worldPos"].y)))
-        for interactTrigger in world["interactables"][world["worldIndex"]]:
-            pygame.draw.rect(screen, "green", interactTrigger[0].get_rect(
-                topleft=(interactTrigger[2] + world["worldPos"].x,
-                         interactTrigger[3] + world["worldPos"].y)))
 
     if needFlip:
         pygame.display.flip()
@@ -1284,7 +1310,7 @@ while running:
         isPauseKeyPressed = False
 
     if not isInMainMenu and not isInPauseMenu:
-        manageControls(pygame.key.get_pressed(), playerInfos, worldInfos, ennemiesList, PLAYER_CONSTS)
+        manageControls(pygame.key.get_pressed(), playerInfos, worldInfos, PLAYER_CONSTS)
         manageAnimations(playerInfos, PLAYER_CONSTS)
 
     pygame.mouse.set_visible(isInPauseMenu or isInMainMenu)
