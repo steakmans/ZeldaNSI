@@ -1102,7 +1102,7 @@ def manageMainMenu(screen, world, player, ennemies, isInMainMenu, titleMusicPlay
                 isInMainMenu = False
                 isInPauseMenu = False
                 pygame.mixer.music.stop()
-                pygame.mixer.music.load(world["music"][0])
+                pygame.mixer.music.load(world["music"][27])
                 pygame.mixer.music.play(-1, 0, 0)
                 player = {
                     "playerPos": pygame.Vector2(686, 332),
