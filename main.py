@@ -1290,6 +1290,32 @@ def manageDeath(screen, player, world, ennemies, timer, isInMainMenu, timeDelay,
         return isInMainMenu, timeDelay
 
 
+def manageWinScreen(screen, timer, isInMainMenu, timeDelay, fontTitle, fontButton):
+    if timer > 1:
+        black_fade = pygame.Surface((screen.get_width(), screen.get_height()))
+        black_fade.set_alpha(10)
+        screen.blit(black_fade, (0, 0))
+        pygame.mouse.set_visible(True)
+
+        # buttons
+        pygame.draw.rect(screen, "red", pygame.Rect(1366 / 2 - 150, 912 / 2 + 50, 300, 90))
+        img = fontTitle.render("Bravo vous avez sauvé le royaume!", True, "White")
+        screen.blit(img, (1366 / 2 - img.get_width() / 2, 200))
+        img = fontButton.render("Vous pouvez maintenat explorer le monde librement.", True, "White")
+        screen.blit(img, (1366 / 2 - img.get_width() / 2, 320))
+        img = fontButton.render("Retour au menu", True, "White")
+        screen.blit(img, (1366 / 2 - img.get_width() / 2, 912 / 2 + 75))
+
+        if 1366 / 2 - 150 <= pygame.mouse.get_pos()[0] <= 1366 / 2 + 150 and pygame.mouse.get_pressed()[0]:
+            if 912 / 2 + 50 <= pygame.mouse.get_pos()[1] <= 912 / 2 + 140:
+                isInMainMenu = True
+                timeDelay = 0
+                return isInMainMenu, timeDelay
+
+        pygame.display.update()
+        return isInMainMenu, timeDelay
+
+
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -1298,9 +1324,6 @@ while running:
             if event.key == pygame.K_e and not game_finished:
                 game_finished = manageInteractables(screen, worldInfos, playerInfos, ennemiesList, PLAYER_CONSTS,
                                                     game_finished)
-
-    if game_finished:
-        continue
 
     if pygame.key.get_pressed()[pygame.K_ESCAPE] and not isInMainMenu:
         if not isPauseKeyPressed and playerInfos["life"] > 0:
@@ -1339,6 +1362,8 @@ while running:
     elif playerInfos["life"] <= 0:
         isInMainMenu, timeDelay = manageDeath(screen, playerInfos, worldInfos, ennemiesList, timer, isInMainMenu,
                                               timeDelay, fontTitle, fontButton)
+    elif game_finished:
+        isInMainMenu, timeDelay = manageWinScreen(screen, timer, isInMainMenu, timeDelay, fontTitle, fontButton)
     else:
         manageCollisions(screen, playerInfos, worldInfos, ennemiesList, PLAYER_CONSTS)
         manageMovement(screen, playerInfos, worldInfos, ennemiesList, dt)
