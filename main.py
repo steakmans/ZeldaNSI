@@ -3,13 +3,14 @@ import time
 import pygame
 import json
 from os.path import exists
+from os import mkdir
 
 # Pygame values DO NOT MODIFY
 pygame.init()
 pygame_icon = pygame.image.load('./resources/gui/icon.png')
 pygame.display.set_icon(pygame_icon)
 pygame.display.set_caption("ZeldaNSI")
-screen = pygame.display.set_mode((1366, 912), flags=pygame.FULLSCREEN | pygame.NOFRAME)
+screen = pygame.display.set_mode((1366, 912)) #, flags=pygame.FULLSCREEN | pygame.NOFRAME)
 running = True
 clock = pygame.time.Clock()
 dt = 0
@@ -1191,6 +1192,7 @@ def managePauseMenu(screen, player, world, ennemies, buttons, isInMainMenu, titl
 
 def saveGame(world, player):
     try:
+        mkdir("./save")
         with open("save/save.json", "w") as file:
             dict_prov = player.copy()
             dict_prov["playerPos"] = (player["playerPos"].x, player["playerPos"].y)
@@ -1203,6 +1205,8 @@ def saveGame(world, player):
             json.dump(dict_prov, file)
             file.close()
             print("Saved game")
+    except OSError:
+        print("Save file already exists")
     except FileNotFoundError:
         print("Save file was not found")
 
