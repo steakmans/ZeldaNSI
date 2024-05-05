@@ -4,7 +4,6 @@ import pygame
 import json
 from os.path import exists
 
-# [1222.2, 785.2] [-400, -265]
 # Pygame values DO NOT MODIFY
 pygame.init()
 pygame_icon = pygame.image.load('./resources/gui/icon.png')
@@ -672,7 +671,6 @@ worldInfos = worldInfos_base.copy()
 ennemiesList = []
 
 for item in worldInfos["colliding"]:
-    # noinspection PyTypeChecker
     worldInfos["collisions"].append(pygame.mask.from_surface(item))
 
 
@@ -1336,7 +1334,9 @@ while running:
         manageControls(pygame.key.get_pressed(), playerInfos, worldInfos, PLAYER_CONSTS)
         manageAnimations(playerInfos, PLAYER_CONSTS)
 
-    pygame.mouse.set_visible(isInPauseMenu or isInMainMenu)
+    pygame.mouse.set_visible(isInPauseMenu or isInMainMenu or game_finished)
+
+    #Stops game time when game in pause
     if isInPauseMenu:
         dt = 0
 
@@ -1371,10 +1371,12 @@ while running:
         manageDisplay(screen, playerInfos, worldInfos, ennemiesList, True, SNAKE_TEXTURES, ICONS, dt, PLAYER_CONSTS,
                       textToShow, fontButton)
 
+    #Make text disappear after a certain time
     for text in textToShow.copy():
         if text[1] < time.time():
             textToShow.remove(text)
 
+    #Add hearts when in inventory
     for i in range(playerInfos["objects"]["coeur"]):
         playerInfos["objects"]["coeur"] -= 1
         playerInfos["life"] += 4
